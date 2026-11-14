@@ -1,0 +1,77 @@
+id = "adaptation.version_migration"
+
+title = "Version migration playbook (patch and DLC adaptation)"
+
+category = "adaptation"
+
+file_types = [
+    "mod",
+    "txt",
+    "gui",
+    "gfx",
+    "yml",
+    "log",
+]
+
+tags = [
+    "version_migration",
+    "supported_version",
+    "descriptor",
+    "compatibility",
+    "breaking_change",
+    "dlc_gating",
+    "has_dlc",
+    "modifier_rename",
+    "define_rename",
+    "replace_path",
+    "silent_break",
+    "error_log",
+    "ctd",
+    "consumer_goods",
+    "re_verify_order",
+    "版本迁移",
+    "适配",
+    "兼容",
+    "更新",
+    "改版",
+    "补丁",
+    "版本号",
+    "静默失效",
+    "闪退",
+]
+
+body = "HOI4 mods fail against a new patch in two different ways: loudly (crash, or a line in error.log) and silently (a renamed modifier or define simply stops applying, so the mod still loads and just plays wrong). This is the migration playbook: pin the target version, apply the documented renames, choose what to re-verify and in which order, then set supported_version and replace_path to match what you actually tested.\n\n## 1. Pin the target version before editing anything\n- supported_version in descriptor.mod is a claim, not a probe. supported_version=\"1.17.*\" asserts the author tested the 1.17 branch; never bump it as a cosmetic edit, and never widen it to a branch nobody launched.\n- version is the mod's own number and is independent of supported_version. Bump version when you ship the migration; do not reuse the game's patch number as the mod version.\n- Read the installed build from the user's launcher-settings.json (HOI4 documents folder) instead of trusting a wiki, a forum post, or a dated knowledge snapshot. Snapshot files record a version plus the date observed, so they can be stale within weeks.\n- A single hotfix can add GUI containers, so a wildcard is only honest if you re-ran the checklist on the newest hotfix of that branch. Record the exact build string used for the test in the changelog.\n- DLC gating is part of the target definition. Each major DLC ships free features plus paid, DLC-locked elements - in one recent expansion army HQs and ship captains are player DLC features, the old guided missile equipment stays free while new missile types need the DLC, and landmark buildings exist without the DLC but their vanilla content is locked. Gate your own additions with has_dlc checks, and remember a mod tested only with the DLC enabled has not been tested on a bare install.\n\n## 2. Documented changes to apply\nRenames (old to new; the old spelling is dropped, not aliased):\n- 1.16.9 to 1.17.3, four army sub-unit modifiers go from plural marines to singular marine: modifier_army_sub_unit_marines_attack_factor to modifier_army_sub_unit_marine_attack_factor, and the same pattern for _defence_factor, _max_org_factor, _speed_factor.\n- 1.15 defines: HOUR_BAD_COMBAT_REEVALUATE = 48 became CANCEL_COMBAT_DISADVANTAGE_RATIO = 1.5 plus CANCEL_COMBAT_MIN_DURATION_HOURS = 48 (invasion variants added alongside). PLAN_PROVINCE_LOW_VP_IMPORTANCE_AREA became PLAN_PROVINCE_LOW_VP_DEFENSE_THRESHOLD, and the medium, high, and capital importance defines split into separate threshold and importance entries.\n- 1.15 removed defines outright: NUKE_MIN_DAMAGE_PERCENT, NUKE_MAX_DAMAGE_PERCENT, STRATEGIC_BOMBER_NUKE_AIR_SUPERIORITY, ANNEX_RATIO, HOURS_BETWEEN_REDISTRIBUTION, PLAN_FRONT_SECTION_MAX_LENGTH, PLAN_FRONT_SECTION_MIN_LENGTH.\nNew keys worth adopting (1.16.9 to 1.17.3 additions, transcribed from the patch diff): planning_decay_rate_factor, army_retreat_speed_factor, naval_invasion_division_cap, air_invasion_division_cap, army_experience_from_volunteers, faction_influence_contribution_factor, faction_influence_war_score_factor, industrial_capacity_factory_powered, industrial_capacity_dockyard_powered, production_speed_buildings_powered_factor, energy_gain_factor, out_of_power_impact_factor, local_resources_<Resource>_factor, <Doctrine>_mastery_gain_factor, <Doctrine>_track_mastery_gain_factor, local_factory_energy_consumption, factory_energy_consumption.\nBehaviour changes with no rename:\n- 1.15 map: rocketsites.txt and airports.txt are deprecated; each building needs its own entity model placed in the state instead, and removal happens through the Nudger tool. Spawn Points are a new building definition term and must sit at the junction of air bases and rocket launch sites.\n- 1.15 GUI: inline localisation no longer works in GUI and other screens; a text block must attach a real localisation key through localization_key instead of an inline [?array|%1] expression.\n- 1.15 script constants: common/script_constants defines reusable values, used in script as constant:name.path. Only records documented as supporting constants accept them; add_design_template_bonus, add_breakthrough_progress, prototype_time, and complexity take them directly.\n- 1.13 consumer goods: the old single number was split into consumer_goods_factor (a modifier) and consumer_goods_expected_value (the base or expected value, normally a fixed number changeable only by law in vanilla). Real consumer goods R = y x (1 - x), where y is the expected value and x is the factor; the source's worked example uses the 35 percent wartime-economy base, so a 10 percent factor yields 31.5. Do not read the factor as flat percentage points.\n- 1.17.4 frontend: frontendmainview.gui gained change_background and available_background, background definitions live under common/frontend/backgrounds/ and may carry dlc_allowed and locale blocks, and every background and thumbnail must be .dds or the game can crash.\n- DLC-era units and UI: add_temporary_buff_to_unit no longer belongs inside the unit block and must be written inside unit_modifier; dynamic icon syntax was rewritten so the old code stops working; tech tree, division designer, and country selection screens carry required containers, so stale copies crash.\n\n## 3. Silent breakage versus logged breakage versus crash\n- Silent: a renamed modifier in an idea, focus, or law is discarded with no message, so the mod loads and the bonus is simply gone; a removed define falls back to an engine default; deprecated rocketsites.txt and airports.txt are ignored; stale inline localisation renders raw text; a frontend background definition that is missing simply never appears in the picker; DLC-gated content on a non-DLC install is plainly absent.\n- Logged: duplicate container names are reported in error.log from 1.15 onward, but only within the same file or screen and never for nesting, so a clean log does not prove the UI is correct. Unbalanced braces, wrong folders, and unresolved sprite or loc keys also land in error.log rather than crashing.\n- Crash: a missing required container (right_vertical_slider in core.gui, rocket_selection_view for the missile system, the research_groups_grid block surviving inside technology_unit_statlist_item_equipment when it must be deleted), diacritics in state file names, a non-.dds background, and a mod that overrides common/ideas _economic.txt while its IF sits inside an OR without the new ELSE branches. The guide's own field report also puts AI errors and crashes down to a mod that never overrode its defines.\n\n## 4. Re-verify in this order\n1. Defines and common/ constants; cheapest to fix and the reported source of AI-side crashes.\n2. Technology and equipment files, because tech unlocks feed sub_units, modules, and AI design weights.\n3. Ideas and laws (including the consumer goods pair), which is where silent modifier loss hides.\n4. on_actions, because hooks may call effects, scopes, or defines that no longer exist.\n5. GUI and GFX last among the script layers, since these entries crash rather than log and the newer container set must be diffed against the vanilla file of the exact build.\n6. Localisation after all of the above, because keys depend on every earlier decision and are the cheapest layer to regenerate.\n\n## 5. supported_version and replace_path\n- Choose the narrowest wildcard you actually exercised: a 1.17.3 migration test justifies supported_version=\"1.17.*\", not \"1.19.*\", and not a bare \"1.17.3\" unless you want the launcher to warn on every hotfix.\n- Keep replace_path for folders you fully re-ship. Prefer a mod-prefixed file override over a folder replacement, because replace_path hides the whole vanilla folder and any vanilla file you forgot to copy disappears without an error.\n- Never add replace_path while migrating to fix a single broken file; migrate the file, then reconsider the descriptor. Pair any replace_path with an explicit note on which vanilla files were copied forward, and re-check that folder first after the next patch.\n- If DLC content is optional, ship the free path as the default and gate the DLC path, so supported_version stays truthful for users who own nothing."
+
+syntax_blocks = [
+    "supported_version = \"1.17.*\"\nversion = \"1.2.0\"\ndependencies = { \"Required Mod\" }",
+    "modifier_army_sub_unit_marines_attack_factor -> modifier_army_sub_unit_marine_attack_factor (also _defence_factor, _max_org_factor, _speed_factor)",
+    "HOUR_BAD_COMBAT_REEVALUATE = 48  ->  CANCEL_COMBAT_DISADVANTAGE_RATIO = 1.5 + CANCEL_COMBAT_MIN_DURATION_HOURS = 48 ; PLAN_PROVINCE_LOW_VP_IMPORTANCE_AREA -> PLAN_PROVINCE_LOW_VP_DEFENSE_THRESHOLD",
+    "real consumer goods R = consumer_goods_expected_value * (1 - consumer_goods_factor)   # 35% wartime base with a 10% factor gives 35 * (1 - 0.10) = 31.5%",
+]
+
+relationships = [
+    "structure.descriptor owns the descriptor keys; this file only says how to choose their values during a migration.",
+    "structure.replace_path_load_order explains why replace_path hides vanilla content; section 5 applies that risk to migration.",
+    "debug.common_errors classifies error.log after a crash; this file supplies the patch-specific keys that produce those lines.",
+    "hoi4.latest_update is a dated snapshot, so it gives a starting hypothesis for the target build, never the installed build.",
+    "Renamed modifiers feed ideas, laws, and focus rewards, which is why the re-verify order puts defines and equipment ahead of GUI.",
+]
+
+validation = [
+    "Re-read descriptor.mod before shipping and confirm supported_version names a branch you actually launched, and that version was bumped independently.",
+    "Grep the whole mod for each old spelling in the migration list and confirm zero remaining hits for the plural marine modifiers and the retired combat and planning defines.",
+    "Confirm every overridden define still exists in the new common/defines files, and that the mod overrides defines at all, since an unadapted define set is the reported AI-crash source.",
+    "Diff error.log against the previous patch's log with debug mode on, and require zero duplicate-container and missing-container entries.",
+    "Open the GUI-heavy screens in game (main menu, core.gui elements, rocket selection, tech tree, country selection) because those gaps crash instead of logging.",
+    "Verify consumer goods in game as base times (1 - factor), and reject any migration that wrote the factor as flat percentage points.",
+    "Do not add or widen replace_path in the same change set as a migration diff unless the folder was fully re-shipped and the copied vanilla files are listed.",
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\适配指南\\1.17.3对比1.16.9新增修正（5改）.txt - supplied the 1.17.3 patch diff: the four marine modifier renames, the added modifier names, and the target-modifier variants.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\适配指南\\v1.15.x HOI 模组迁移（适配）工作指南.pdf - supplied the 1.14 to 1.15 migration guide: deprecated rocketsites.txt and airports.txt, renamed and removed defines, required and forbidden GUI containers, inline localisation removal, script constants, and DLC gating.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\适配指南\\关于1.13新修订 生活消费品 代码说明.txt - supplied the consumer goods split into consumer_goods_factor and consumer_goods_expected_value and the R = y x (1 - x) formula.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\适配指南\\1.17.4 新功能：玩家现在可以自行选择主菜单显示的背景图  修改&适配 Tips.pdf - supplied the 1.17.4 frontendmainview.gui change_background and available_background containers, the common/frontend/backgrounds definitions with dlc_allowed and locale, and the .dds crash requirement.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\适配指南\\门前惊雷版本兼容与适配指南-霜泽图书馆汉化组.pdf - supplied the DLC free-versus-paid split, the state override and nudge advice, the warning that unadapted defines cause AI errors and crashes, and add_temporary_buff_to_unit moving into unit_modifier.",
+    "D:\\aNOTHERDSH\\PPPP\\RHoiScribe\\resources\\knowledge\\hoi4\\updates\\latest-update.toml - supplied the supported_version wildcard guidance and the instruction to read the installed build from launcher-settings.json.",
+]

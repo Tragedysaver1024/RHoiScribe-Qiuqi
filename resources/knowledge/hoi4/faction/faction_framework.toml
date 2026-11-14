@@ -1,0 +1,72 @@
+id = "faction.framework"
+
+title = "Faction framework: templates, goals, manifests and rules"
+
+category = "faction"
+
+file_types = [
+    "txt"
+]
+
+tags = [
+    "faction",
+    "factions framework",
+    "faction_goal",
+    "faction_manifest",
+    "faction_rule",
+    "rule group",
+    "faction_template",
+    "create_faction_from_template",
+    "ratio_progress",
+    "progress_sections",
+    "set_faction_rule",
+    "faction influence",
+    "faction initiative",
+    "common/factions",
+    "txt",
+    "1.19",
+    "阵营",
+    "派系",
+    "派系目标",
+    "阵营规则",
+    "阵营模板",
+    "阵营章程",
+    "影响力"
+]
+
+body = "Faction data lives in common/factions: templates/, goals/, rules/ with rules/groups/, member_upgrades/ with member_groups/, icons/pool.txt, upgrades/ stubs. Ids are global and take DB refs or inline blocks. A faction_goal_id needs name, description, category (short_term, medium_term, long_term) and group; group gives sprite GFX_<group> and loc key group_<GROUP>_FACTION_GOAL_FILTER. visible and available run ROOT = faction leader, FROM = browsing member; completed, cancel, complete_effect, cancel_effect, select_effect, remove_effect and ai_will_do are leader-only, no FROM. Empty completed never completes; auto_complete = yes ends a goal at 100%. Continuous goals use progress or ratio_progress; ratio_progress takes total_amount/completed_amount or total_amount_collection/completed_amount_collection (common/collections), exclusive, progress = completed/total. range remaps it (default 0..1; min>max inverts), scale scales a modifier block by fulfillment, reversed by the shortfall, progress_sections split the bar into min/max bands granting modifier or rule (on_activate and on_deactivate disabled). Manifests are is_manifest = yes goals with no category, read by faction_manifest_fulfillment. A faction_rule_id needs type, fixing trigger scope: joining_rule (THIS joiner, FROM leader), war_declaration_rule (THIS declarer, FROM target), call_to_war_rule (THIS caller, FROM target), member_rules (leader; exile eligibility), change_leader_rules (THIS candidate), peace_conference_rules (only peace_action_modifiers, active while set). visible, available, can_remove and ai_will_do are leader-scoped; ai_will_do <= 0 blocks AI purchase, available/can_remove are UI hints. Groups list rules plus optional default_rule, overridden by template default_rules. Changing a rule costs NFactions.FACTION_INITIATIVE_CHANGE_RULE_COST FI; console faction_initiative X (fi X) grants FI. Effects: create_faction (obsolete), create_faction_from_template, dismantle_faction, set_faction_leader, set_faction_spymaster, set_faction_name, add_to_faction, remove_from_faction, leave_faction, set_faction_rule, set_faction_manifest, add_faction_goal, remove_faction_goal, add_faction_initiative, add_faction_power_projection, add_faction_influence_score, add_faction_influence_ratio. Triggers: faction_manifest_fulfillment, has_faction_template, faction_power_projection, faction_influence_score, faction_influence_ratio, faction_influence_rank, has_faction_goal, has_completed_faction_goal, faction_goal_fulfillment, has_manpower_to_become_leader, has_industry_to_become_leader. Modifiers, all prefixed faction_influence_: war_score_factor, industrial_capacity_factor, garrison_support_provider_factor, garrison_support_reciver_factor, expeditionary_force_provider_factor, expeditionary_force_reciver_factor. Prefix ids by tag. Empty template visible hides it from the UI, yet create_faction_from_template still works; templates take can_leader_join_other_factions and icon (default faction_icon_pool)."
+
+syntax_blocks = [
+    "my_goal_hold_the_line = {\n    name = my_goal_hold_the_line_name\n    description = my_goal_hold_the_line_desc\n    category = short_term\n    group = FOCUS_FILTER_DEFENSE\n    visible = {\n        FROM = { original_tag = MYT }\n    }\n    completed = {\n        controls_state = 42\n    }\n    complete_effect = {\n        add_faction_power_projection = 50\n        add_faction_initiative = 1\n    }\n    ai_will_do = {\n        base = 10\n    }\n}",
+    "@manifest_fulfilled_value = 0.75\nfaction_manifest_my_unity = {\n    name = my_unity_goal_name\n    description = my_unity_goal_desc\n    is_manifest = yes\n    ratio_progress = {\n        total_amount = 8\n        completed_amount_collection = collection:my_tags_in_faction\n        scale = {\n            faction_trade_opinion_factor = 0.50\n        }\n        reversed = {\n            stability_factor = -0.15\n        }\n        progress_sections = {\n            manifest_fulfilled = {\n                min = @manifest_fulfilled_value\n                modifier = {\n                    drift_defence_factor = 0.15\n                }\n            }\n        }\n    }\n}",
+    "my_joining_rule_no_offensive_war = {\n    type = joining_rules\n    visible = {\n        NOT = { has_government = fascism }\n    }\n    available = {\n        is_faction_leader = yes\n    }\n    can_remove = {\n        has_faction_military_unlocked = yes\n    }\n    ai_will_do = {\n        base = 0\n        modifier = {\n            add = 2\n            NOT = { tag = ENG }\n        }\n    }\n    modifier = {\n        political_power_factor = -0.1\n    }\n}\n\nmy_rule_group_joining = {\n    rules = {\n        my_joining_rule_no_offensive_war\n        joining_rule_non_fascist\n    }\n}",
+    "faction_template_my_bloc = {\n    name = my_bloc_name\n    manifest = faction_manifest_my_unity\n    goals = {\n        my_goal_hold_the_line\n    }\n    default_rules = {\n        my_joining_rule_no_offensive_war\n        change_leader_rule_manifest_below_35\n        faction_peace_rule_liberation_focus\n    }\n    can_leader_join_other_factions = yes\n    icon = GFX_faction_icon_allies\n}"
+]
+
+relationships = [
+    "Use with on_actions.faction_autonomy_exile to react to faction creation, joining, leadership and departure.",
+    "Faction goals are the faction-level analogue of focus trees: see focus.basic_tree for tree structure and cost conventions.",
+    "ratio_progress reads scripted collections; see script.arrays and script.variables for the collection and variable machinery it shares.",
+    "Rule modifiers must be real modifiers; see script.modifiers before writing a faction rule modifier block.",
+    "Influence and power-projection triggers belong in script.triggers contexts, not in goal visible blocks that lack FROM."
+]
+
+validation = [
+    "Confirm the target build actually ships common/factions; the folder is absent from older versions and unknown keys log parse errors.",
+    "Every goal, rule, group and template id is global: prefix by tag and re-scan unique identifiers before shipping.",
+    "Give every continuous goal either progress or ratio_progress, and never mix total_amount with total_amount_collection in one block.",
+    "Check a goal's completed block is non-empty, otherwise the goal is unreachable and auto_complete = yes can never fire.",
+    "Use the plural type tokens the vanilla files use (joining_rules, war_declaration_rules, call_to_war_rules) unless the game log proves the singular form parses.",
+    "Make sure group loc keys exist as group_<GROUP>_FACTION_GOAL_FILTER plus a GFX_<group> sprite, or the filter renders blank.",
+    "Re-read every modifier and trigger name against vanilla before shipping; faction influence modifiers use the engine misspelling reciver."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\英文原文md说明文档.md - primary spec for faction_goal, faction_rule, rule groups, faction_template, effect list, trigger list, modifier list, NFactions defines, console command and AI FI spending",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\goals\\faction_goals_term.txt - commented goal skeleton showing name, description, category, group, allowed, visible, available, completed, complete_effect and ai_will_do",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\goals\\faction_manifests.txt - manifest with is_manifest, ratio_progress total_amount plus completed_amount_collection, scale, reversed and progress_sections",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\rules\\factions_rules.txt and rules\\groups\\rule_groups.txt - minimal faction_rule with type, trigger, ai_will_do and modifier, plus the rule group block",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\templates\\factions_templates.txt - template with name, manifest, goals, default_rules and icon",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\icons\\pool.txt - faction_icon_pool fallback icon list",
+    "D:\\SteamLibrary\\steamapps\\common\\Hearts of Iron IV\\common\\factions\\ - vanilla 1.19.5 tree, _documentation.md and shipped rule, goal and template files used to cross-check paths, key names and rule type tokens"
+]

@@ -1,0 +1,78 @@
+id = "defines.overriding"
+
+title = "Overriding defines and common define ids"
+
+category = "defines"
+
+file_types = [
+    "lua",
+]
+
+tags = [
+    "defines",
+    "NDefines",
+    "common/defines",
+    "lua",
+    "load order",
+    "replace_path",
+    "constants",
+    "MAX_CIV_FACTORIES_PER_LINE",
+    "BASE_MAX_COMMAND_POWER",
+    "MAX_ARMY_EXPERIENCE",
+    "trait slot",
+    "camera",
+    "compatibility",
+    "type match",
+    "全局参数",
+    "修改定义",
+    "覆盖定义",
+    "常量表",
+    "指挥上限",
+    "经验上限",
+    "生产线上限",
+    "摄像机",
+    "兼容性",
+    "静默失效",
+]
+
+body = "A mod overrides defines by placing a .lua file in common/defines/ containing only dotted assignments: NDefines.<Module>.<KEY> = <value>. Vanilla ships table literals (NDefines = { NGame = { ... } NCountry = { ... } NMilitary = { ... } }); your file is a patch, not a copy, so it needs no braces and no unrelated keys. Load order: files execute in name order, so keep the mod file after the vanilla ones and never put common/defines in replace_path - replace_path removes the vanilla files, and keys you did not repeat fall back to engine defaults, not to vanilla. Two mods assigning the same key do not merge: the last one in load order wins silently.\nOnly assigned keys change, order inside the file is irrelevant, and a key missing from the base table is silently dropped, so copy names verbatim from the dump. Types must match vanilla: int stays int (MAX_CIV_FACTORIES_PER_LINE = 15), float keeps its decimal point (BASE_MAX_COMMAND_POWER = 80.0), strings keep their quotes (START_DATE = \"1936.1.1.12\"), and arrays stay complete with vanilla's arity and slot order - GAME_SPEED_SECONDS keeps 5 entries, UNIT_LEADER_INITIAL_TRAIT_SLOT and UNIT_LEADER_TRAIT_SLOT_PER_LEVEL keep 4 (field marshal, corps commander, navy general, operative), while the pack's older 3-entry snippet would shift every slot.\nSilent failures: a file outside common/defines, a .txt extension instead of .lua, a file hidden by replace_path or a mistyped key all give no error and no log line - the game keeps the old value, the classic 'my define did nothing'.\nVerified defaults (1.16 dumps):\nNGame.START_DATE = \"1936.1.1.12\"\nNGame.GAME_SPEED_SECONDS = { 2.0, 0.5, 0.2, 0.1, 0.0 }\nNCountry.BASE_MAX_COMMAND_POWER = 80.0\nNCountry.POLITICAL_POWER_UPPER_CAP = 2000.0\nNCountry.POLITICAL_POWER_LOWER_CAP = -500.0\nNCountry.MAX_STABILITY = 1.0\nNCountry.MAX_WAR_SUPPORT = 1.0\nNCountry.DEFAULT_STABILITY = 0.5\nNCountry.DEFAULT_WAR_SUPPORT = 0.5\nNProduction.MAX_CIV_FACTORIES_PER_LINE = 15\nNProduction.MAX_MIL_FACTORIES_PER_LINE = 150\nNProduction.DEFAULT_MAX_NAV_FACTORIES_PER_LINE = 10\nNProduction.CONVOY_MAX_NAV_FACTORIES_PER_LINE = 15\nNProduction.CAPITAL_SHIP_MAX_NAV_FACTORIES_PER_LINE = 5\nNMilitary.CORPS_COMMANDER_DIVISIONS_CAP = 24\nNMilitary.FIELD_MARSHAL_DIVISIONS_CAP = 24\nNMilitary.FIELD_MARSHAL_ARMIES_CAP = 5\nNMilitary.CORPS_COMMANDER_ARMIES_CAP = -1\nNMilitary.MAX_ARMY_EXPERIENCE = 500\nNMilitary.MAX_NAVY_EXPERIENCE = 500\nNMilitary.MAX_AIR_EXPERIENCE = 500\nNMilitary.WAR_SCORE_LOSSES_RATIO = 0.5\nNMilitary.UNIT_LEADER_INITIAL_TRAIT_SLOT = { 1.0, 0.0, 1.0, 0.0 }\nNMilitary.UNIT_LEADER_TRAIT_SLOT_PER_LEVEL = { 0.5, 0.5, 0.5, 0.0 }\nThe pack tutorials still quote No Step Back-era numbers (command power 360.0, army experience 5000, trait slots 2.0); copy the dump, never the tutorial. Camera keys come only from the camera snippet: NDefines_Graphics.NFrontend.CAMERA_MIN_HEIGHT = 25.0, CAMERA_MAX_HEIGHT = 3500.0, NGraphics.CAMERA_ZOOM_SPEED = 50, CAMERA_ZOOM_KEY_SCALE = 0.02, CAMERA_ZOOM_SPEED_DISTANCE_MULT = 15.0."
+
+syntax_blocks = [
+    "common/defines/00_defines.lua",
+    "NDefines.NCountry.BASE_MAX_COMMAND_POWER = 80.0",
+    "NDefines.NProduction.MAX_CIV_FACTORIES_PER_LINE = 15",
+    "NDefines.NMilitary.CORPS_COMMANDER_DIVISIONS_CAP = 24",
+    "NDefines.NMilitary.UNIT_LEADER_INITIAL_TRAIT_SLOT = { 1.0, 0.0, 1.0, 0.0 }",
+    "NDefines.NGame.START_DATE = \"1936.1.1.12\"",
+    "NDefines_Graphics.NFrontend.CAMERA_MAX_HEIGHT = 3500.0",
+]
+
+relationships = [
+    "Defines are engine-level constants: script never references them by id, but every system (production, command, XP, camera) reads them.",
+    "replace_path in descriptor.mod replaces whole folders, so listing common/defines there hides the vanilla files from the loader.",
+    "Load order is decided by file name first and then by mod load order; the last assignment of a key wins.",
+    "A define applies to every country in the game, so per-country balance should use modifiers or ideas instead.",
+    "Values must match the game build in use; the pack's 1.16 dumps and its older tutorials disagree, so the dump is the reference.",
+    "Camera and UI keys are cosmetic but checksum-relevant for multiplayer, since the host and clients must share the same defines.",
+]
+
+validation = [
+    "The file sits in common/defines/ with a .lua extension and its name sorts after the vanilla defines files.",
+    "Every key is copied verbatim from the dump (module, spelling, capitalisation) - no invented names, no tutorial-era names.",
+    "Value types match vanilla: int stays int, float keeps a decimal point, strings stay quoted, arrays keep vanilla arity and slot order.",
+    "common/defines is absent from replace_path, and no other mod in the load order assigns the same keys.",
+    "Diff the mod file against vanilla: only the intended keys are present, with no pasted blocks of unrelated defines.",
+    "The change was confirmed in game (or by a changed checksum with no log error), and any temporary test line was removed.",
+    "Balance impact was measured, not assumed: command cap, XP cap and factory-line caps change every country at once.",
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\definition\\00_defines.lua文件教程.txt -> the short 'modify this' list: BASE_MAX_COMMAND_POWER, MAX_CIV_FACTORIES_PER_LINE, DEFAULT_MAX_NAV_FACTORIES_PER_LINE, CORPS_COMMANDER_DIVISIONS_CAP, FIELD_MARSHAL_DIVISIONS_CAP, FIELD_MARSHAL_ARMIES_CAP, MAX_ARMY/NAVY/AIR_EXPERIENCE, UNIT_LEADER_TRAIT_SLOT_PER_LEVEL, UNIT_LEADER_INITIAL_TRAIT_SLOT, WAR_SCORE_LOSSES_RATIO (its numbers are pre-1.16 and do not match the dumps).",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\definition\\完整版翻译_defines附修改教程.lua -> assignment syntax NDefines.<Module>.<KEY> = <value> ('开头词.类目名.条目名 = 数值') and the module table layout.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\definition\\摄像机（在defines内修改）.lua -> camera keys and values: CAMERA_MIN_HEIGHT 25.0, CAMERA_MAX_HEIGHT 3500.0, CAMERA_ZOOM_SPEED 50, CAMERA_ZOOM_KEY_SCALE 0.02, CAMERA_ZOOM_SPEED_DISTANCE_MULT 15.0.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\definition\\分类别解析defines\\部署-军事_defines.lua -> NMilitary/WAR_SCORE_LOSSES_RATIO 0.5, CORPS_COMMANDER_DIVISIONS_CAP 24, CORPS_COMMANDER_ARMIES_CAP -1, FIELD_MARSHAL_DIVISIONS_CAP 24, FIELD_MARSHAL_ARMIES_CAP 5, MAX_ARMY/NAVY/AIR_EXPERIENCE 500, UNIT_LEADER_INITIAL_TRAIT_SLOT { 1.0, 0.0, 1.0, 0.0 }, UNIT_LEADER_TRAIT_SLOT_PER_LEVEL { 0.5, 0.5, 0.5, 0.0 }.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\definition\\分类别解析defines\\生产与装备_defines.lua -> NProduction line caps: MAX_CIV_FACTORIES_PER_LINE 15, MAX_MIL_FACTORIES_PER_LINE 150, DEFAULT_MAX_NAV_FACTORIES_PER_LINE 10, CONVOY_MAX_NAV_FACTORIES_PER_LINE 15, CAPITAL_SHIP_MAX_NAV_FACTORIES_PER_LINE 5.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\definition\\分类别解析defines\\国家属性（人力、稳定度、战争支持）_defines.lua -> NCountry: BASE_MAX_COMMAND_POWER 80.0, POLITICAL_POWER_UPPER_CAP 2000.0, POLITICAL_POWER_LOWER_CAP -500.0, MAX_STABILITY 1.0, MAX_WAR_SUPPORT 1.0, DEFAULT_STABILITY 0.5, DEFAULT_WAR_SUPPORT 0.5.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\definition\\分类别解析defines\\基础游戏规则（时间、速度、存档）_defines.lua -> NGame: START_DATE, GAME_SPEED_SECONDS { 2.0, 0.5, 0.2, 0.1, 0.0 } with the 'must be 5 entries' note.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\钢铁雄心4 指令代码.txt -> direct-edit snippet for UNIT_LEADER_INITIAL_TRAIT_SLOT / UNIT_LEADER_TRAIT_SLOT_PER_LEVEL that still uses 3 entries, the source of the array-arity pitfall.",
+]

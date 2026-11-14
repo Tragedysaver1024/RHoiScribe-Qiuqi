@@ -41,6 +41,13 @@ inspect_hoi4_scope
 inspect_hoi4_type_rule
 ```
 
+## Каталог знаний
+
+- `search_hoi4_knowledge` ищет по встроенному каталогу знаний HOI4 и возвращает resource URI; тему читайте через `resources/read`.
+- Охват: основы script, effect, trigger, scope, collection, циклы и операции с массивами, event target, focus tree, event, decision, on_action, scripted GUI и super event, faction, power balance, special project, equipment module и design, building, character и trait, idea и modifier, OOB и стартовая настройка, bookmark, переопределение define, AI strategy и AI area, миграция версий и workflow-гайды.
+- Поиск не зависит от регистра и является поиском подстроки: должны совпасть все term, разделённые пробелами. В tags есть китайские синонимы, поэтому китайские запросы находятся без перевода.
+- Полный список тем доступен через `rhoiscribe://hoi4/knowledge/catalog`.
+
 ## Проверка качества проекта
 
 - Project index: `index_hoi4_project` возвращает structured definitions, references и files для mod root и optional game roots.
@@ -82,6 +89,10 @@ Returned file path должен оставаться под корректным
 - Для записи требуется `approved=true`.
 - Сначала предпочитайте existing workspace art. Устанавливайте `approved=true` только после user approval на создание новых procedural GUI/GFX assets.
 - Для animated GUI sprites используйте existing sprite-sheet conventions и знание `frameAnimatedSpriteType`; не называйте generated static sprite анимацией.
+- Регистрация existing art: `register_hoi4_gfx_sprites` сканирует directory с изображениями внутри mod и дописывает недостающие entry `spriteType` в file `.gfx`, поэтому арт от других tool или нарисованный вручную становится пригодным для GUI/GFX без ручной регистрации.
+- Регистрации сопоставляются по texture path, поэтому повторный запуск идемпотентен: sprite не дублируется, а в отчёте видны уже зарегистрированные изображения, регистрации без file внутри scanned directory и имена, пропущенные из-за конфликта.
+- `dry_run = true` только показывает block, который был бы дописан; file `.gfx` изменяет лишь `dry_run = false`.
+- Форма имени: `sprite_prefix` (по умолчанию `GFX_`) плюс sanitized file stem либо sanitized relative path при `name_style = "relative_path"`. Если соглашение project требует верхнего регистра, задайте `uppercase = true`.
 
 Рекомендуемый asset workflow:
 
@@ -89,6 +100,8 @@ Returned file path должен оставаться под корректным
 generate_gui_gfx_asset with dry_run = true
 review returned files and metadata
 generate_gui_gfx_asset with approved=true only after user approval
+register_hoi4_gfx_sprites with dry_run = true
+register_hoi4_gfx_sprites with dry_run = false after review
 ```
 
 ## Окружение и отладка

@@ -30,6 +30,7 @@ mod cwt_profiles;
 mod cwt_project_validation;
 mod environment;
 mod error_log;
+mod gfx_registration;
 mod gui_gfx_asset;
 mod hoi4_keys;
 mod mod_skeleton;
@@ -84,6 +85,10 @@ pub use environment::{
 };
 pub use error_log::{
     ClassifyErrorLogRequest, ErrorLogCategory, ErrorLogClassificationResult, ErrorLogEntry,
+};
+pub use gfx_registration::{
+    GfxSkippedImage, GfxSpriteRegistration, RegisterHoi4GfxSpritesRequest,
+    RegisterHoi4GfxSpritesResult,
 };
 pub use gui_gfx_asset::{
     GenerateGuiGfxAssetRequest, GenerateGuiGfxAssetResult, GeneratedGuiGfxAssetFile,
@@ -349,6 +354,13 @@ const TOOL_SPECS: &[ToolSpec] = &[
         description: "Experimentally generate a local procedural HOI4 PNG asset, .gfx sprite registration, and optional .gui files without external image models; writing requires approved=true.",
         required: &["asset_name", "width", "height", "approved", "dry_run"],
         handler: call_generate_gui_gfx_asset,
+    },
+    ToolSpec {
+        name: "register_hoi4_gfx_sprites",
+        title: "Register HOI4 GFX sprites",
+        description: "Scan an existing image directory inside a mod workspace and emit the missing HOI4 spriteType registrations into an interface .gfx file. Reads every interface .gfx first, so re-runs only add art that is not registered yet and also reports registered sprites whose texture file is missing. Use this instead of generating new art when the mod already ships focus, idea, decision, or event icons.",
+        required: &["workspace_root", "image_directory", "dry_run"],
+        handler: call_register_hoi4_gfx_sprites,
     },
     ToolSpec {
         name: "setup_hoi4_mod_skeleton",
@@ -996,6 +1008,12 @@ impl ToolEngine {
         gui_gfx_asset::generate_gui_gfx_asset(request).map_err(ToolError::InvalidRequest)
     }
 
+    pub fn register_hoi4_gfx_sprites(
+        request: RegisterHoi4GfxSpritesRequest,
+    ) -> Result<RegisterHoi4GfxSpritesResult, ToolError> {
+        gfx_registration::register_hoi4_gfx_sprites(request).map_err(ToolError::InvalidRequest)
+    }
+
     pub fn setup_hoi4_mod_skeleton(
         request: Hoi4ModSkeletonRequest,
     ) -> Result<ToolExecutionResult, ToolError> {
@@ -1408,6 +1426,16 @@ fn call_generate_gui_gfx_asset(
 ) -> Result<CallToolResult, ToolError> {
     let request = parse_arguments::<GenerateGuiGfxAssetRequest>(arguments)?;
     Ok(structured_result(ToolEngine::generate_gui_gfx_asset(
+        request,
+    )?))
+}
+
+fn call_register_hoi4_gfx_sprites(
+    _context: &ToolContext,
+    arguments: JsonObject,
+) -> Result<CallToolResult, ToolError> {
+    let request = parse_arguments::<RegisterHoi4GfxSpritesRequest>(arguments)?;
+    Ok(structured_result(ToolEngine::register_hoi4_gfx_sprites(
         request,
     )?))
 }

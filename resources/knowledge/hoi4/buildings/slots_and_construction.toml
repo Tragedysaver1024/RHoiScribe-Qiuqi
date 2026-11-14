@@ -1,0 +1,70 @@
+id = "buildings.slots"
+
+title = "Building definitions, slot caps, and construction costing"
+
+category = "buildings"
+
+file_types = [
+    "txt",
+    "gfx",
+    "yml"
+]
+
+tags = [
+    "buildings",
+    "建筑",
+    "building_slots",
+    "建筑格",
+    "shares_slots",
+    "level_cap",
+    "province_max",
+    "state_max",
+    "base_cost",
+    "per_level_extra_cost",
+    "infrastructure_construction_effect",
+    "construction_speed",
+    "infrastructure",
+    "基础设施",
+    "military_production",
+    "air_defence",
+    "防空",
+    "state_category",
+    "spawn_points",
+    "facility"
+]
+
+body = "Buildings are defined in common/buildings/*.txt inside buildings = { token = { ... } }. Most keys are optional and several pairs are mutually exclusive. Slot behaviour first: shares_slots = yes makes the building use state building slots, as civilian and military factories do; provincial = yes makes it a per-province building such as a fort, which cannot combine with shares_slots. level_cap holds the numeric caps: state_max is the maximum per state, province_max the maximum per province tile, and the two are mutually exclusive. group_by = any_name puts several buildings into one shared cap group, and exclusive_with = rocket_site blocks another building on the same tile. Per-terrain province caps are set in common/terrain/*.txt. Cost comes from base_cost, per_level_extra_cost for a rising per-level price, per_controlled_building_extra_cost which scales with how many you already control, base_cost_conversion for conversion, infrastructure_construction_effect = yes so infrastructure level scales build speed, and repair_speed_factor, default 1.0, for repair. country_modifiers takes enable_for_controllers { TAG } plus modifiers { ... }, and state_modifiers takes state scoped modifiers. Role flags: infrastructure = yes marks infrastructure with its construction speed bonus and extra resources; military_production, general_production and naval_production add that many factories or dockyards to the controller; air_base, supply_node, is_port, refinery, fuel_silo, radar, nuclear_reactor and gun_emplacement are boolean markers, while land_fort and naval_fort take a number, rocket_production and rocket_launch_capacity take daily output, and air_defence takes the anti-air value. Placement keys are only_costal, disabled_in_dmz, is_buildable = no and allied_build. value is the base hit points used by strategic bombing, scales per level and also sets peace conference score; damage_factor above zero raises damage taken and below zero lowers it, and damage_factor = -1 is how the source makes a facility immune. tags = { facility } is what lets raids and the damage_building effect target the building. Presentation keys are icon_frame (frame index into GFX_buildings_strip), show_modifier, special_icon, hide_if_missing_tech with missing_tech_loc, show_on_map for the model count and show_on_map_meshes. Slot supply is not set here: state category files in common/state_category/*.txt carry per-category slot counts, add_extra_state_shared_building_slots raises them from script, and global_building_slots, local_building_slots and their _factor variants change them, local ones only in state scoped dynamic modifiers. spawn_points = { token = { type = state or province max = 1 only_costal = yes disable_auto_nudging = yes } } places map models. The source marks specialization = { specialization_naval } and detecting_intel_type = navy as unconfirmed, so do not depend on them."
+
+syntax_blocks = [
+    "buildings = { my_building = { base_cost = 6000 shares_slots = yes icon_frame = 3 } }",
+    "level_cap = { shares_slots = yes state_max = 5 group_by = industry }",
+    "level_cap = { province_max = 1 exclusive_with = rocket_site }",
+    "my_project_facility = { provincial = yes base_cost = 20000 value = 30 damage_factor = -1 building_level_cap = { state_max = 1 province_max = 1 } }",
+    "infrastructure = yes air_base = yes supply_node = yes is_port = yes land_fort = 3 naval_fort = 2",
+    "country_modifiers = { enable_for_controllers = { TAG } modifiers = { max_fuel_building = 1.5 } }",
+    "spawn_points = { my_spawn = { type = province max = 1 only_costal = yes disable_auto_nudging = yes } }",
+    "add_extra_state_shared_building_slots = 2"
+]
+
+relationships = [
+    "buildings.resources: that topic covers buildings and resources set from state history; this topic covers the building definitions themselves and their slot and cost rules.",
+    "technology.special_projects: a special project facility is defined here with provincial = yes, value, damage_factor and building_level_cap.",
+    "common/state_category/*.txt supplies per-category slot counts, and common/terrain/*.txt supplies per-terrain province caps.",
+    "script effects and modifiers change slot counts at runtime through add_extra_state_shared_building_slots and the building slot modifiers."
+]
+
+validation = [
+    "Confirm shares_slots and provincial are never both set on one building, and that state_max and province_max are not both used in level_cap.",
+    "Check every icon_frame index points at a frame that exists in GFX_buildings_strip, and that a sprite exists for the building picture.",
+    "Verify the building lands in a state or province whose state category and terrain caps leave room, otherwise the building is defined but unbuildable.",
+    "Confirm base_cost, per_level_extra_cost and per_controlled_building_extra_cost are intended, since mixing per-level and per-controlled cost silently changes the price curve.",
+    "Use damage_factor and value deliberately: negative damage_factor reduces bombing damage, and value also feeds peace conference score.",
+    "Record that this building template does not enumerate state category slot numbers, so read common/state_category/*.txt rather than assuming a slot count.",
+    "Do not ship specialization or detecting_intel_type until their behaviour is confirmed; the source marks both unconfirmed."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\建筑模板\\建筑模板最新版.txt — full building key inventory: shares_slots, provincial, level_cap with state_max, province_max, group_by and exclusive_with, cost keys, role flags, damage and value semantics, presentation keys, terrain cap location, and spawn_points.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\科技 装备 学说 制造商 特殊工程模板\\sp_project教程（整合版v1）.txt — the facility building sample using provincial, value, damage_factor, building_level_cap, requirements and construction_speed_modifier.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\提词器1.12.txt — state category file location common/state_category/*.txt, the add_extra_state_shared_building_slots effect, and the global and local building slot modifiers."
+]

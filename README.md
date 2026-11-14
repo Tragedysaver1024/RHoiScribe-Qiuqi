@@ -17,6 +17,15 @@ If RHoiScribe helps your modding workflow, starring the repository helps other H
 
 </div>
 
+> [!IMPORTANT]
+> **This is a modified edition (fork), not the upstream project.**
+> It is based on [RHoiScribe](https://github.com/czxieddan/RHoiScribe) and on the
+> [秋起图书馆 / QIUQI LIBRARY](https://steamcommunity.com/sharedfiles/filedetails/?id=3445449478)
+> Hearts of Iron IV modding library, and it is distributed under the
+> **GNU AGPL-3.0-or-later**, the same license as upstream.
+> See [NOTICE](NOTICE) for the full attribution and the list of changes in this edition,
+> and [docs/rhoiscribe-attribution.md](docs/rhoiscribe-attribution.md) for the credit page.
+
 RHoiScribe gives Codex, Claude Code, and other MCP-compatible clients a local HOI4 modding reference layer plus tools for generating game-readable files.
 
 The goal is simple: reduce wasted agent work caused by repeated web searches, stale assumptions, unsafe file paths, missing localisation encoding, and Paradox script that looks plausible but does not load in game.

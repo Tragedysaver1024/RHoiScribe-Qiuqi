@@ -1,0 +1,69 @@
+id = "equipment.modules_and_designs"
+
+title = "Equipment modules, design slots, and designer variants"
+
+category = "equipment"
+
+file_types = [
+    "txt",
+    "gfx",
+    "yml"
+]
+
+tags = [
+    "equipment_modules",
+    "装备模块",
+    "module_slots",
+    "装备设计",
+    "create_equipment_variant",
+    "variant",
+    "add_stats",
+    "multiply_stats",
+    "upgrades",
+    "xp_cost",
+    "build_cost_resources",
+    "can_convert_from",
+    "add_equipment_type",
+    "critical_parts",
+    "parent",
+    "obsolete",
+    "坦克模块",
+    "飞机模块",
+    "舰船模块"
+]
+
+body = "Modules are edited under common/units/equipment/modules, the path the source states. Designs are not a separate database but the create_equipment_variant effect, which the source places usually in history/countries/XXX.txt and treats as an effect, so any effect context works; it never documents history/units/equipment or common/units/equipment as design locations, so treat those as unverified. A module is a token inside equipment_modules = { }, doubling as the localisation key with _desc. Common keys are abbreviation, category (slot family), sfx and parent; ships add gfx and critical_parts, aircraft add gui_category, add_equipment_type and allow_mission_type, turrets use allowed_module_categories (main_armament_slot) and forbid_equipment_type_exact_match_for_category, and ground modules use allow_equipment_type and forbid_equipment_type (flame, anti_air, artillery, anti_tank, amphibious) plus forbid_equipment_type_exact_match = armor, only on AA, rocket and amphibious engines. parent chains generations and marks predecessor-fitted equipment obsolete. Stats stack in three layers: add_stats is additive per module, multiply_stats multiplies, and add_average_stats feeds averaged values, used for naval targeting on aircraft and gun penetration plus HP on ships; aircraft also use mission_type_stats. Economy keys are xp_cost for army or air designs, dismantle_cost_ic, build_cost_resources (steel, chromium, tungsten, aluminium, rubber, never oil), can_convert_from with repeatable module, module_category, convert_cost_ic blocks. Ship modules have no xp_cost; each costs 5 XP by default. Stat names differ by domain, for example soft_attack, hard_attack, breakthrough, defense and armor_value on ground; air_attack, air_defence, air_range, air_agility and air_ground_attack on aircraft; max_strength, naval_speed, lg_attack, hg_attack, torpedo_attack, anti_air_attack, sub_detection, naval_range and carrier_size on ships. Designs assign modules by slot name, not by category. Tanks use main_armament_slot, turret_type_slot, suspension_type_slot, armor_type_slot, engine_type_slot and special_type_slot_1 to 4. Aircraft use fixed_main_weapon_slot, fixed_auxiliary_weapon_slot_1 to 4, engine_type_slot and special_type_slot_1 to 6, and must fill every special slot, keeping = empty where nothing is fitted. Ships use fixed_ship_battery_slot, fixed_ship_secondaries_slot, fixed_ship_anti_air_slot, fixed_ship_torpedo_slot, fixed_ship_deck_slot_1 and 2, fixed_ship_fire_control_system_slot, fixed_ship_radar_slot, fixed_ship_engine_slot, fixed_ship_armor_slot and the front, mid and rear custom slots. A design also takes name, type (chassis or MTG hull token), parent_version where 0 is oldest, name_group, upgrades such as tank_nsb_engine_upgrade at integer levels, icon, model, design_team for an MIO and obsolete; rarer keys are allow_without_tech and role_icon_index for ships. Icons use GFX_EMI_<token> for ground and air and GFX_SMI_<gfx> for ships."
+
+syntax_blocks = [
+    "equipment_modules = { my_module = { abbreviation = \"EMA\" category = tank_engine_type add_stats = { maximum_speed = 2 } xp_cost = 25 } }",
+    "add_stats = { soft_attack = 4 breakthrough = 3 } multiply_stats = { reliability = -0.1 }",
+    "build_cost_resources = { steel = 2 tungsten = 1 } can_convert_from = { module_category = tank_engine_type convert_cost_ic = 50 }",
+    "modules = { main_armament_slot = tank_heavy_machine_gun turret_type_slot = tank_light_one_man_tank_turret engine_type_slot = tank_gasoline_engine }",
+    "upgrades = { tank_nsb_engine_upgrade = 2 tank_nsb_armor_upgrade = 1 }",
+    "create_equipment_variant = { name = \"Light Tank Mk. IV\" type = light_tank_chassis_1 parent_version = 0 obsolete = yes }",
+    "special_type_slot_1 = empty",
+    "GFX_EMI_my_module and GFX_SMI_my_ship_gfx spriteType entries, then my_module:0 and my_module_desc:0"
+]
+
+relationships = [
+    "equipment.archetypes: the archetype declares the chassis or hull and exposes the upgrade tokens a design fills in; this topic covers the slots and modules themselves.",
+    "technology.special_projects: enable_equipment_modules and enable_equipments unlock tokens defined here.",
+    "technology.tech_trees: techs activate modules and chassis before a design may use them.",
+    "units.sub_units and division templates consume finished designs through equipment types rather than module tokens."
+]
+
+validation = [
+    "Match every slot key in a design against the documented slot lists for that domain; a key outside the list is not a fillable slot, so fix the name instead of assuming the engine reports it.",
+    "Confirm each slot value is a module token whose category is allowed in that slot family, and that aircraft special slots are filled or set to empty.",
+    "Check that add_stats, multiply_stats and add_average_stats use domain-valid stat names, since a misspelled stat is silently dropped rather than rejected.",
+    "Verify build_cost_resources never lists oil, and that ship modules omit xp_cost because ship designs are fixed at 5 XP per module.",
+    "Confirm every parent token resolves and that the predecessor chain is not circular, or obsolescence marking breaks.",
+    "Check that a design type is a chassis or hull defined in common/units/equipment, and that allow_without_tech is intentional when the design must appear before research.",
+    "Add both the module name and the _desc localisation entry plus the GFX_EMI_ or GFX_SMI_ sprite before shipping."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\科技 装备 学说 制造商 特殊工程模板\\装备模块（equipment_modules）教程（Phoebe制）.txt — module DB path, per-domain category and stat lists, add_stats/multiply_stats/add_average_stats, xp_cost, build_cost_resources, can_convert_from, icon and localisation conventions.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\科技 装备 学说 制造商 特殊工程模板\\装备设计模板（坦克，飞机，舰船）.txt — create_equipment_variant keys, the slot name inventory per domain, chassis and hull tokens, and the empty special-slot requirement for aircraft.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\科技 装备 学说 制造商 特殊工程模板\\装备模板（陆军）.txt — archetype-side upgrades list and equipment file location used for cross-checking design type tokens."
+]

@@ -1,0 +1,68 @@
+id = "characters.traits_reference"
+
+title = "Trait types, valid trait ids, and trait modifier keys"
+
+category = "characters"
+
+file_types = [
+    "txt",
+    "yml",
+    "gfx"
+]
+
+tags = [
+    "traits",
+    "trait_definition",
+    "leader_traits",
+    "unit_leader",
+    "country_leader",
+    "advisor",
+    "commander",
+    "trait_slots",
+    "modifier",
+    "特质",
+    "将领特质",
+    "内阁特质",
+    "修正",
+    "提词器",
+    "common/country_leader",
+    "common/unit_leader",
+    "txt"
+]
+
+body = "Trait definition reference for 特质 / 将领特质 / 内阁特质. Country-leader traits live in common/country_leader/*.txt inside one leader_traits = { ... } block; unit-leader traits live in common/unit_leader/*.txt in the same wrapper. A country-leader trait takes random = yes|no (yes puts it into the random pool), sprite = 1..18 (a frame of GFX_idea_traits_strip in interface/ideas.gfx), flat modifier keys, equipment_bonus = { armor = { build_cost_ic = -0.1 instant = yes } }, targeted_modifier = { tag = TAG attack_bonus_against = 0.3 }, ai_will_do = { base = 2 } and command_cap = 10 (command points it occupies). A unit-leader trait adds type = all|field_marshal|corps_commander|navy and trait_type = basic_trait|status_trait|personality_trait|assignable_trait|basic_terrain_trait|assignable_terrain_trait|exile, integer skill deltas (attack_skill defense_skill logistics_skill planning_skill maneuvering_skill coordination_skill) plus *_skill_factor multipliers, modifier / non_shared_modifier / corps_commander_modifier / field_marshal_modifier, sub_unit_modifiers = { submarine = { naval_visibility = -0.1 } }, mutually_exclusive = other_trait, parent = { traits = { A B } num_parents_needed = 1 }, gui_row / gui_column for tree placement, cost 1000. Traits are used by country_leader, advisor (political_advisor army_chief navy_chief air_chief high_command theorist), field_marshal / corps_commander / navy_leader and scientist. Role skills cap at 10. Level mechanics: advisor ids end in a grade suffix - army_chief_organizational_1 = 专家, _2 = 大师, _3 = 奇才 - and the suffix alone sets the grade; commander trait slots grow with leader level, so extra assignable picks on a low-level commander are dropped. Verified ids: offense panzer_leader infantry_expert cavalry_leader combined_arms_expert bearer_of_artillery fortress_buster trickster commando; defense ambusher trait_cautious guerilla_fighter defensive_doctrine unyielding_defender; terrain desert_fox swamp_fox trait_mountaineer hill_fighter jungle_rat ranger urban_assault_specialist; logistics organizer skilled_staffer logistics_wizard scavenger; politics silent_workhorse popular_figurehead war_industrialist captain_of_industry ideological_crusader head_of_intelligence; theory military_theorist naval_theorist air_warfare_theorist nuclear_scientist. Common trait keys: army_org_factor army_attack_factor stability_factor political_power_gain research_speed_factor max_command_power navy_org (flat number, not a percentage). Pitfalls: reusing a vanilla id redefines or duplicates the vanilla trait, so prefix mod ids; a trait whose type does not match the character role is silently ignored; granting more traits than the level slot budget allows overflows silently; sprite outside 1..18 or outside GFX_idea_traits_strip renders blank; mutually exclusive pairs (fortress_buster/scavenger, infantry_expert/ambusher, defensive_doctrine/offensive_doctrine, fast_planner/thorough_planner) cannot coexist."
+
+syntax_blocks = [
+    "leader_traits = { my_trait = { random = no sprite = 3 political_power_gain = 0.1 command_cap = 10 } }",
+    "leader_traits = { my_general_trait = { type = corps_commander trait_type = assignable_trait attack_skill = 1 modifier = { army_attack_factor = 0.05 } cost = 1000 gui_row = 2 gui_column = 1 } }",
+    "leader_traits = { my_navy_trait = { type = navy trait_type = basic_trait maneuvering_skill = 1 modifier = { naval_speed_factor = 0.1 } } }",
+    "parent = { traits = { my_trait_a my_trait_b } num_parents_needed = 1 }",
+    "equipment_bonus = { train_equipment = { build_cost_ic = 0.05 reliability = 0.15 } }",
+    "country_leader = { ideology = nazism traits = { my_trait } }"
+]
+
+relationships = [
+    "Character advisor slots attach country-leader traits; the six slots are political_advisor, army_chief, navy_chief, air_chief, high_command and theorist.",
+    "field_marshal, corps_commander, navy_leader and scientist roles attach unit-leader traits, so the trait type must match the role.",
+    "Trait modifiers use the same country-scope modifier keys as ideas and dynamic modifiers.",
+    "Trait ids share the global identifier pool with ideas and advisor idea_token, so a reused id collides.",
+    "sprite frames resolve through GFX_idea_traits_strip in interface/ideas.gfx."
+]
+
+validation = [
+    "Every trait id must be unique against vanilla and the rest of the mod; prefix mod traits.",
+    "Confirm the trait type (all / field_marshal / corps_commander / navy) matches the role that receives it.",
+    "Check sprite is inside 1..18 and that the frame exists in GFX_idea_traits_strip.",
+    "Verify no mutually_exclusive pair is granted to the same character.",
+    "Compare granted trait count with the commander level slot budget before finishing.",
+    "Re-check units: navy_org is a flat value, percentage effects use _factor keys.",
+    "Localise each trait name and description in every shipped language."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\人物与特质模板\\将领技能特质模板.txt - leader_traits wrapper, unit-leader type/trait_type enumerations and every unit trait field.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\人物与特质模板\\特质制作模板+修正列表+装备种类及装备修正.txt - country-leader trait skeleton (random, sprite, modifier), modifier key list and equipment_bonus equipment categories.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\人物与特质模板\\军事、政府内阁全部特性代码与模板.txt - advisor slot types, the _1/_2/_3 grade suffix and real advisor, high_command and theorist trait ids.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\部分内阁特质提词器.txt - political advisor, army/navy/air chief, high_command, field-marshal and navy trait ids with their effects.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\钢4人物trait分类参考.txt - modifier keys grouped by trait category (领袖, 政治顾问, 理论家, 部长, 总司令) with vanilla caps."
+]

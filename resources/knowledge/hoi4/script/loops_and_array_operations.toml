@@ -1,0 +1,70 @@
+id = "script.loops"
+
+title = "Loops and array operations: for_each, while, and in-place array edits"
+
+category = "script"
+
+file_types = [
+    "txt",
+    "yml"
+]
+
+tags = [
+    "for_each_loop",
+    "for_each_scope_loop",
+    "while_loop_effect",
+    "random_scope_in_array",
+    "遍历",
+    "循环",
+    "数组",
+    "for_each",
+    "while 循环",
+    "break",
+    "any_of_scopes",
+    "resize_array",
+    "is_in_array",
+    "scripted_localisation",
+    "hoi4 script"
+]
+
+body = "Where script.arrays covers static definition and index basics, this entry covers iteration and mutation. for_each_scope_loop = { array = X, break = name, <effects> } switches scope to each element, so the body acts on the element itself. for_each_loop = { array = X, value = v, index = i, break = name, <effects> } does not switch scope: the body defaults to ROOT and reaches the element only through var:<value> (default v) and its slot through var:<index> (default i). Both take break = <name>, a local temp variable (default name break) whose non-zero value ends the loop - the documented cap-iterations trick. random_scope_in_array = { array, break, limit = { triggers }, effects } acts on one matching element. Writes: add_to_array = { array, index, value } where index inserts at a slot (shorthand add_to_array = { X = value }); remove_from_array = { array, index or value }, the two conflict, neither drops the last slot; clear_array = X; resize_array = { array, size, value fill default 0 } (shorthand resize_array = { X = size }) truncating or padding; temp mirrors add_to_temp_array, remove_from_temp_array, clear_temp_array, resize_temp_array. Read a slot as array^index (SOV_paranoia_generic_portraits_array^3) and the length as array^num, the pseudo-index that tests emptiness via check_variable = { Global.Test_Arr^num > 0 }. Array triggers: is_in_array { array, value }; any_of and all_of (no scope switch, value/index keys, element via var:v); any_of_scopes and all_of_scopes (scope switched, no value/index keys). while_loop_effect = { break, limit = { triggers }, <effects> } needs no array: limit is the continue condition, checked at the start of every pass, so the body must mutate what limit reads. The canonical pattern zeroes a counter, loops while below 5, works inside hidden_effect, bumps the counter and flags the target so the next pass skips it. Pitfalls: an index past the last slot is out of range and reads garbage, so clamp against length - 1 (the printing example tests temp_looper < temp_max after temp_max = length - 1); a while whose counter never moves, or moves only in a branch that never runs, spins forever; value/index/break are names you choose, so nested loops need distinct ones or the inner loop overwrites the outer handle; a for_each_loop body left in ROOT scope buffs ROOT instead of the element; a scope-switched body loses the caller, so re-reach it with ROOT/PREV or stash it in a temp variable. Worked example: on_startup fills global.Test_Arr with THIS.id per country; the starter tests length greater than 0, sets temp_looper = -1 and emits [GET_your_arr_looper]; the looper recomputes temp_max, increments temp_looper and returns GET_your_arr_looper_1 = [?Global.Test_Arr^temp_looper.GetName] plus a recursive [GET_your_arr_looper], with an empty fallback text block. Keep traversal in triggers, effects or tooltips (desc reportedly crashes); route it through tech_effect plus custom_effect_tooltip when a description must show it."
+
+syntax_blocks = [
+    "for_each_scope_loop = {\n    array = SWI_humanitarian_support_countries\n    remove_ideas = { SWI_humanitarian_effort }\n}",
+    "for_each_loop = {\n    array = SOV.many_weapons_array\n    value = weapons_country\n    index = i\n    break = b\n    add_equipment_to_stockpile = {\n        type = infantry_equipment\n        amount = 200\n        producer = var:weapons_country\n    }\n}",
+    "set_temp_variable = { ROOT.a = 0 }\nfor_each_loop = {\n    array = global.countries\n    break = b\n    var:v = {\n        if = {\n            limit = { exists = yes }\n            add_ideas = militarism_focus\n            add_to_temp_variable = { ROOT.a = 1 }\n        }\n    }\n    if = {\n        limit = { check_variable = { ROOT.a = 10 } }\n        set_temp_variable = { ROOT.b = 1 }\n    }\n}",
+    "set_temp_variable = { VIC.temp_targets_index_a = 0 }\nwhile_loop_effect = {\n    limit = {\n        check_variable = { temp_targets_index_a < 5 }\n    }\n    hidden_effect = {\n        random_core_state = {\n            limit = {\n                arms_factory > 2\n                NOT = { has_state_flag = VIC_development_of_tankograd_flag }\n            }\n            add_extra_state_shared_building_slots = 1\n            set_state_flag = VIC_development_of_tankograd_flag\n        }\n        add_to_temp_variable = { VIC.temp_targets_index_a = 1 }\n    }\n}",
+    "add_to_array = { array = global.Test_Arr index = 0 value = THIS.id }\nremove_from_array = { array = global.Test_Arr value = THIS.id }\nresize_array = { array = global.Test_Arr size = 10 value = 0 }\nglobal.Test_Arr^2\nglobal.Test_Arr^num",
+    "any_of_scopes = {\n    array = UKR.core_states\n    is_controlled_by = SOV\n}\nany_of = {\n    array = UKR.core_states\n    var:v = { is_controlled_by = SOV }\n}\nis_in_array = { array = global.Test_Arr value = THIS.id }",
+    "defined_text = {\n    name = GET_your_arr_looper\n    text = {\n        trigger = {\n            set_temp_variable = { temp_max = Global.Test_Arr^num }\n            subtract_from_temp_variable = { temp_max = 1 }\n            check_variable = { temp_looper < temp_max }\n            add_to_temp_variable = { temp_looper = 1 }\n        }\n        localization_key = GET_your_arr_looper_1\n    }\n    text = {\n        localization_key = GET_your_arr_looper_0\n    }\n}"
+]
+
+relationships = [
+    "Extends script.arrays, which covers array declaration, temp arrays and index reads; this entry covers iteration and mutation.",
+    "Use with script.variables for the local temp variables that serve as value, index and break handles.",
+    "Use with script.scopes because for_each_scope_loop switches scope while for_each_loop keeps the caller scope.",
+    "Use with script.effects and script.triggers for the bodies wrapped by the loop keys and by any_of/all_of.",
+    "Use with script.expressions_math when a loop counter needs rounded or calculated arithmetic.",
+    "The traversal-printing pattern pairs with scripted_localisation rendering and with the tech_effect tooltip workaround."
+]
+
+validation = [
+    "A while_loop_effect must mutate the variable its limit reads inside the body, otherwise the condition never changes and the game hangs.",
+    "Clamp every array^index access against array^num minus one; reading or writing the slot past the last element is out of range.",
+    "In for_each_loop, reach the element through var:<value> (default v) because the body does not switch scope and defaults to ROOT.",
+    "Give each nested loop its own value, index and break names, since they are local temp variables the inner loop would otherwise overwrite.",
+    "Never pass index and value together to remove_from_array; with neither it removes the last element, and clear_array is the explicit wipe.",
+    "Set the break variable in the loop scope (for example set_temp_variable = { ROOT.b = 1 }) and remember any non-zero value ends the loop.",
+    "Keep array traversal inside triggers, effects or tooltips rather than desc text, and verify the array is non-empty before printing it."
+]
+
+source_refs = [
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/pum数组、循环教程.txt - add_to_array, remove_from_array, clear_array, resize_array, for_each_scope_loop, for_each_loop, break demo, random_scope_in_array, any_of/all_of/any_of_scopes/all_of_scopes, while_loop_effect counter example, built-in per-scope arrays",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/钢铁雄心4变量与数组教程.txt - array command reference, is_in_array and while_loop_effect signatures, remove-core decision with for_each_scope_loop",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/基础变量.txt - check_variable compare operators and add_to_variable family used inside loop counters",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/遍历数组打印/模板文件/README.txt - file layout of the traversal-printing example",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/遍历数组打印/模板文件/common/on_actions/_startup_on_actions.txt - on_startup filling global.Test_Arr with THIS.id per country",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/遍历数组打印/模板文件/common/scripted_localisation/TST.txt - starter/looper defined_text pair, temp_max = length - 1 guard, recursive call",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/遍历数组打印/模板文件/localisation/test_l_simp_chinese.yml - [?Global.Test_Arr^temp_looper.GetName] printing and the desc crash warning",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/遍历数组打印/模板文件/common/technologies/test.txt - tech_effect plus custom_effect_tooltip route for showing traversal in a description"
+]

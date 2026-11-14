@@ -1,0 +1,67 @@
+id = "script.collections"
+
+title = "Scripted collections: definition, operators, and collection triggers/effects"
+
+category = "script"
+
+file_types = [
+    "txt"
+]
+
+tags = [
+    "collection",
+    "scripted collection",
+    "集合",
+    "脚本化集合",
+    "common/collections",
+    "input",
+    "operators",
+    "game:all_countries",
+    "game:all_possible_countries",
+    "game:all_states",
+    "collection_size",
+    "collection_contains",
+    "every_collection_element",
+    "any_collection_element",
+    "all_collection_elements",
+    "has_resources_in_collection",
+    "count_in_collection",
+    "hoi4 script"
+]
+
+body = "A collection is a named, reusable grouping of scope-capable objects of one type, defined per file in common/collections/*.txt (hot-reloadable in game). The engine fills it from the elements that satisfy its conditions and drops elements that stop satisfying them; the refresh cadence is not documented, so treat membership as evaluated at use time, not as a cached snapshot. Two hard limits separate collections from plain arrays (script.arrays): an element must be a scope and can never be a variable, and elements never repeat because duplicates are collapsed automatically. A collection normally needs no scope of its own - the input does. Shape: collection_name = { input = game:collection or collection:other_collection, operators = { ... }, name = loc_key }. With no operators the input elements become the collection unchanged; operators adds further collections evaluated with each input element as scope, so a chain can change element type (faction_members leaves you in country scope, owned_states or controlled_states leaves you in state scope) and several entries at once act as a union. Documented engine inputs: game:all_countries, game:all_possible_countries, game:all_states, game:empty, game:scope (ROOT) and country:faction_members; documented operators include faction_members, owned_states, controlled_states and collection:<name>. ROOT and FROM come from the calling block, never from the definition; SCOPE is fixed to the element and PREV/THIS depend on position in the chain. limit = { triggers } inside operators filters elements. Order is load-bearing: each step consumes the previous result, so the element type at a step decides which limit keys mean anything - a country flag check placed after controlled_states is evaluated in state scope and quietly fails. Related triggers: collection_size (element count against a constant or variable), has_resources_in_collection (resource, amount, extracted = yes for production or the default no for surplus), count_in_collection (buildings, manpower, unit plus equipment_ratio, unit_category plus equipment_ratio, stockpile), collection_contains (countries or country; country-element collections only), any_collection_element and all_collection_elements. Effect: every_collection_element reuses the same input/operators/limit/name block and runs its body once per element. Collection blocks accept var_name@tag inside their effect and trigger bodies, which is why they beat every_country and every_state for per-scope lookups such as ROOT.some_var@THIS. Empty is a normal state: counts read zero, any_collection_element is false, every_collection_element does nothing and nothing is logged as an error, so tooltips need a collection_size guard. Cost scales with chain length times element count and every call re-evaluates, so prefer one defined collection reused in several places over duplicated inline copies."
+
+syntax_blocks = [
+    "my_collection = {\n    input = game:all_countries\n    operators = {\n        faction_members\n        limit = {\n            not = { has_country_flag = my_skip_flag }\n        }\n    }\n    name = my_collection_name\n}",
+    "input = game:all_countries\noperators = {\n    faction_members\n    owned_states\n}\n# after owned_states the element is a state: every later limit runs in state scope",
+    "operators = {\n    faction_members\n    collection:another_collection\n}\n# union: faction members of each input country plus the elements of another_collection",
+    "collection_size = {\n    input = {\n        input = game:all_countries\n        operators = {\n            limit = { is_in_faction_with = ROOT }\n        }\n    }\n    value > 3\n}",
+    "collection_contains = {\n    collection = game:all_countries\n    countries = { ENG GER }\n}",
+    "has_resources_in_collection = {\n    collection = {\n        input = game:all_countries\n        operators = { faction_members }\n    }\n    resource = oil\n    amount > 100\n    extracted = no\n}",
+    "any_collection_element = {\n    collection = {\n        input = game:all_countries\n        operators = { controlled_states }\n    }\n    is_controlled_by = ROOT\n}",
+    "every_collection_element = {\n    input = {\n        input = game:all_countries\n        operators = {\n            limit = { not = { has_country_flag = otsr_done } }\n        }\n    }\n    clear_variable = ROOT.import_oil_from_country@THIS\n}"
+]
+
+relationships = [
+    "See script.arrays for plain scope/value arrays; collections differ by refusing variable elements and by collapsing duplicates automatically.",
+    "Use with script.scopes: ROOT/FROM/SCOPE/PREV resolution at the call site decides what each operator step sees.",
+    "Use with script.triggers and script.effects for the bodies of collection_size, any_collection_element and every_collection_element.",
+    "Use with script.variables for the var_name@tag lookups that collection blocks allow inside their effect and trigger bodies.",
+    "Collection name = loc_key keys follow the identifier conventions tracked in script.unique_identifiers."
+]
+
+validation = [
+    "Every custom collection must exist in common/collections/*.txt and be referenced as collection:<name>; the game: prefix is reserved for engine collections such as game:all_countries or game:empty.",
+    "Check the element type after each operator before writing a limit: country triggers placed after owned_states or controlled_states are evaluated in state scope and fail silently.",
+    "Guard any tooltip or display that depends on a collection with collection_size, because an empty collection reports zero and every_collection_element does nothing without logging an error.",
+    "Do not try to store a variable as a collection element; elements are scopes and duplicates are collapsed, unlike arrays.",
+    "Provide name = loc_key whenever the collection is surfaced to the player, otherwise a raw localisation key appears in the tooltip.",
+    "Use has_resources_in_collection, count_in_collection and collection_contains only with country-element collections, since those triggers document country-only inputs.",
+    "Reuse one defined collection instead of duplicating the same inline input/operators block across many effects, because every call re-evaluates the chain."
+]
+
+source_refs = [
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/Collection教程-修订2.txt - definition format (input/operators/limit/name), documented game: inputs and operator names, ROOT/FROM/SCOPE resolution, collection_size, has_resources_in_collection, count_in_collection, collection_contains, any_collection_element, all_collection_elements, every_collection_element, var_name@tag note, otsr worked examples",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/pum数组、循环教程.txt - built-in per-scope arrays (global.countries, core_states, owned_states, controlled_states, faction_members) used to separate array behaviour from collection behaviour",
+    "D:/SteamLibrary/steamapps/workshop/content/394360/3445449478/资料/高级代码/高级计算结合/钢铁雄心4变量与数组教程.txt - array/collection contrast and a full decision example using for_each_scope_loop over global.countries with core_states"
+]

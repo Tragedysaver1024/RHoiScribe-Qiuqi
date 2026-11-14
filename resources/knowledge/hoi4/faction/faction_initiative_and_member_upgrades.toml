@@ -1,0 +1,72 @@
+id = "faction.initiative"
+
+title = "Faction initiative, member upgrades, and AI initiative spending"
+
+category = "faction"
+
+file_types = [
+    "txt"
+]
+
+tags = [
+    "faction initiative",
+    "FI",
+    "member_upgrade",
+    "member_upgrades",
+    "upgrade_cost",
+    "faction_member_upgrade_manpower",
+    "default_upgrade",
+    "spent_faction_initiative_priority",
+    "ai_strategy",
+    "become_spymaster",
+    "become_head_of_crypto",
+    "become_head_of_counter_intel",
+    "become_head_of_operations",
+    "FACTION_INITIATIVE_CHANGE_RULE_COST",
+    "NFactions",
+    "common/factions/member_upgrades",
+    "txt",
+    "1.19",
+    "派系主动性",
+    "阵营主动性",
+    "成员升级",
+    "人力共享",
+    "AI 策略",
+    "间谍首脑"
+]
+
+body = "Faction Initiative (FI) is the faction currency. add_faction_initiative = X grants it and console faction_initiative X (alias fi X) tops up the player's faction; the UI spends it on faction rules, goals, facilities and member upgrades. common/defines/00_defines.lua exposes two NFactions costs: FACTION_INITIATIVE_CHANGE_RULE_COST = 1 for swapping a faction rule and ASSIGN_FACILITY_TO_FACTION_INITIATIVE_COST = 1 for assigning a facility, so a mod overrides the define rather than the script. Rule spending priority is not a global AI weight - each faction rule's own ai_will_do decides whether the AI pays for it. Member upgrades are the per-country perks bought with FI. common/factions/member_upgrades/member_upgrades.txt holds Faction_Member_Upgrade_Id blocks with bonus and optional name, desc and icon; common/factions/member_upgrades/member_groups/member_upgrade_groups.txt holds Faction_Upgrade_Group_Id blocks with name, desc, icon, default_upgrade, upgrade_type and an upgrades list that the UI sorts by bonus. Group name, desc and icon are the defaults, so a level only needs its own keys when it must read differently, and upgrade_cost is the FI price of replacing the current level with that upgrade. The only upgrade_type with code support is faction_member_upgrade_manpower: bonus is the share of the member's own manpower moved into the faction manpower pool, so vanilla's faction_member_upgrade_manpower_group runs 0.0, 0.05, 0.1 and 0.15 with manpower_contribution_full_enable as default_upgrade, where 0.0 means no contribution. upgrades/upgrades.txt and upgrades/groups/upgrade_groups.txt ship empty and undocumented - do not assume the member_upgrade schema applies to them. AI FI spending is steered from common/ai_strategy: a named strategy with enable (and optional allowed), abort_when_not_enabled = yes and an ai_strategy block of type = spent_faction_initiative_priority, id = program, unlock_doctrine_sharing or unlock_faction_commander, and value as the weight. La Resistance intel roles use dedicated types instead: become_spymaster, become_head_of_crypto, become_head_of_counter_intel and become_head_of_operations, normally gated by allowed = { has_dlc = \"La Resistance\" }. FI pools are per faction, so effects that grant or spend FI only matter while the country is in a faction; verify with the console before a focus tree leans on faction spending."
+
+syntax_blocks = [
+    "faction_manpower_sharing2 = {\n    bonus = 0.1\n}",
+    "faction_member_upgrade_manpower_group = {\n    name = FACTION_MANPOWER_CONTRIBUTION\n    desc = FACTION_MANPOWER_CONTRIBUTION_VALUE_DESC\n    default_upgrade = manpower_contribution_full_enable\n    upgrade_type = faction_member_upgrade_manpower\n    upgrades = {\n        manpower_contribution_full_enable\n        faction_manpower_sharing1\n        faction_manpower_sharing2\n        faction_manpower_sharing3\n    }\n    icon = GFX_manpower_contribution\n}",
+    "default_add_faction_facility = {\n    enable = {\n        always = yes\n    }\n    abort_when_not_enabled = yes\n    ai_strategy = {\n        type = spent_faction_initiative_priority\n        id = program\n        value = 5\n    }\n}",
+    "default_become_spymaster_minor = {\n    allowed = {\n        has_dlc = \"La Resistance\"\n    }\n    enable = {\n        is_major = no\n    }\n    abort_when_not_enabled = yes\n    ai_strategy = {\n        type = become_spymaster\n        value = 2\n    }\n}"
+]
+
+relationships = [
+    "Complements faction.framework, which owns templates, goals and rules; this topic covers the FI economy layered on top.",
+    "ai_strategy blocks share the syntax covered by ai.ai_strategy; spent_faction_initiative_priority is a faction-specific type there.",
+    "Member upgrades gate on define costs, so document overrides in defines.game_constants rather than in the faction file.",
+    "Spymaster AI types require La Resistance; gate them with allowed = { has_dlc = \"La Resistance\" }."
+]
+
+validation = [
+    "Verify the FI cost path by hand in game: grant FI with the console faction_initiative 20, then swap a faction rule and watch the counter drop by NFactions.FACTION_INITIATIVE_CHANGE_RULE_COST.",
+    "Give every member upgrade group a default_upgrade that exists in its own upgrades list, or the panel opens on an invalid level.",
+    "Keep bonus values inside the range the upgrade_type expects; faction_member_upgrade_manpower reads bonus as a manpower share, not a flat amount.",
+    "upgrade_cost appears in the shipped documentation but not in any vanilla member upgrade, so test one purchase before relying on it.",
+    "Do not put member-upgrade syntax in upgrades/upgrades.txt or upgrades/groups/upgrade_groups.txt; both ship empty and are undocumented.",
+    "Gate La Resistance spymaster strategies with allowed = { has_dlc = \"La Resistance\" } so non-DLC players do not get dead AI entries.",
+    "Confirm hub AI strategy files are replaced rather than duplicated when overriding a default_* strategy name."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\英文原文md说明文档.md - member upgrade and upgrade group schemas, faction_member_upgrade_manpower, spent_faction_initiative_priority ids, spymaster AI types, FI define and console command",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\member_upgrades\\member_upgrades.txt - four manpower sharing levels with bonus values 0.0, 0.05, 0.1 and 0.15",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\member_upgrades\\member_groups\\member_upgrade_groups.txt - group with default_upgrade, upgrade_type, upgrades list and icon",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\阵营模板\\upgrades\\upgrades.txt and upgrades\\groups\\upgrade_groups.txt - empty stubs confirming these files are undocumented",
+    "D:\\SteamLibrary\\steamapps\\common\\Hearts of Iron IV\\common\\defines\\00_defines.lua - NFactions.FACTION_INITIATIVE_CHANGE_RULE_COST and ASSIGN_FACILITY_TO_FACTION_INITIATIVE_COST values",
+    "D:\\SteamLibrary\\steamapps\\common\\Hearts of Iron IV\\common\\ai_strategy\\default.txt - default_add_faction_facility and default_become_spymaster_minor blocks used to verify strategy syntax",
+    "D:\\SteamLibrary\\steamapps\\common\\Hearts of Iron IV\\common\\factions\\member_upgrades\\ - vanilla member upgrade and group files used to confirm the shipped schema matches the documentation"
+]

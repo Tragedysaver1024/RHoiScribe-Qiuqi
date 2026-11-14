@@ -1,0 +1,69 @@
+id = "technology.special_projects"
+
+title = "Special projects: phases, specializations, prototype equipment, and rewards"
+
+category = "technology"
+
+file_types = [
+    "txt",
+    "gfx",
+    "yml"
+]
+
+tags = [
+    "special_projects",
+    "特殊工程",
+    "special_project",
+    "breakthrough_points",
+    "突破点",
+    "prototype",
+    "原型装备",
+    "specialization",
+    "专业化",
+    "project_tags",
+    "scientist",
+    "科学家",
+    "facility",
+    "设施",
+    "prototype_rewards",
+    "enable_equipments",
+    "equipment_bonus",
+    "ai_will_do",
+    "complexity",
+    "narrative"
+]
+
+body = "Special projects are researched in facilities and built from four linked pieces: a project definition, a specialization, a scientist, and a facility building. The source places projects in the mod's common/special_projects folder, specializations in common/special_projects/project_tags, prototype reward pools in common/special_projects/prototype_rewards, scientist traits in common/scientist_traits/*.txt, and treats the facility as an ordinary building. A project runs in three phases. Establishing is re-run from scratch every time a project is started or restarted, so cancelling there loses that phase. Initial research happens once; cancelling keeps progress and a later re-run skips it. Prototyping repeats iterations, each adding complexity percent until the project reaches 100, and cancelling keeps that progress. Only two keys are mandatory: specialization and prototype_time, the days each prototype iteration costs; everything else is optional. allowed, available and visible are trigger blocks that gate unlock, availability and visibility. narrative { name desc } holds localisation keys, icon and blueprint_image hold GFX names, resource_cost charges materials, complexity sets percent per iteration, special_project_parent lists projects that must all finish first, ai_will_do { base modifier { factor ... } } weights the AI, and empty_reward_weight changes the chance of an empty prototype reward. breakthrough_cost is either a flat number per specialization, such as specialization_air = 2, or a block with base plus modifier blocks, for example specialization_land = { base = 1 modifier = { add = -1 has_tech = improved_medium_tank_chassis } }, so a tech can discount the points charged at start. Rewards split between project_output (also written iteration_output) and the prototype pools. project_output accepts country_effects, facility_state_effects using add_province_modifier with static_modifiers and province = var:facility_province_id, scientist_effects such as retire = yes, enable_equipments, enable_equipment_modules, enable_subunits, sub_unit_bonus such as cavalry { soft_attack = 0.05 }, and equipment_bonus. Prototype equipment is unlocked from the output block rather than a tech, so every token there must already exist in the equipment and module databases. unique_prototype_rewards holds inline named reward blocks, while generic_prototype_rewards pulls tokens from the shared folder. A scientist is a character with scientist = { traits = { ... } skills = { specialization_nuclear = 3 } }; traits may limit themselves with specialization and available and speed work through special_project_prototype_speed_factor. A facility is a building using provincial = yes, base_cost, value, damage_factor = -1 for immunity, building_level_cap { state_max province_max } and requirements. The source never uses a special_project_categories token: the category object is the specialization stored in project_tags."
+
+syntax_blocks = [
+    "my_custom_project = { specialization = \"my_specialization_token\" prototype_time = 5 complexity = 15 }",
+    "breakthrough_cost = { specialization_air = 2 specialization_land = { base = 1 modifier = { add = -1 has_tech = improved_medium_tank_chassis } } }",
+    "project_output = { country_effects = { add_stability = 0.05 } enable_equipment_modules = { limit = { ... } my_module } }",
+    "unique_prototype_rewards = { dynamic_token1 = { country_effects = { add_stability = 0.05 } } }",
+    "generic_prototype_rewards = { generic_prototype_reward_token }",
+    "my_specialization_token = { blueprint_image = \"GFX_my_specialization_blueprint\" facility_model = \"my_specialization_entity\" }",
+    "scientist = { traits = { my_scientist_trait_token } skills = { specialization_nuclear = 3 } }",
+    "special_project_prototype_speed_factor = 0.5"
+]
+
+relationships = [
+    "technology.tech_trees: researched techs gate projects through available or visible has_tech and can discount breakthrough_cost through modifier blocks.",
+    "equipment.modules_and_designs and equipment.archetypes: enable_equipments and enable_equipment_modules unlock variant and module tokens that must already exist there.",
+    "buildings.slots: the facility is a normal building, so provincial, building_level_cap and construction_speed_modifier follow the building rules.",
+    "characters: the scientist block lives on a character and reads traits from common/scientist_traits."
+]
+
+validation = [
+    "Confirm specialization and prototype_time exist in every project; the source marks only these two as required.",
+    "Resolve the specialization token in common/special_projects/project_tags and do not assume a special_project_categories token, which the source never uses.",
+    "Check every token in enable_equipments, enable_equipment_modules and enable_subunits against the equipment, module and subunit databases, otherwise the reward silently unlocks nothing.",
+    "Keep breakthrough_cost arithmetic sane: modifier blocks use add, and a negative add must not push the effective cost below zero.",
+    "Verify facility_state_effects uses var:facility_province_id or a real province id, and that any static_modifiers entry is already defined.",
+    "Confirm the facility building exists with provincial = yes, and that its state_max or province_max allows at least one level where the project is meant to run.",
+    "Localise narrative name and desc, the project icon, and every prototype reward token before shipping."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\科技 装备 学说 制造商 特殊工程模板\\sp_project教程（整合版v1）.txt — project, specialization, scientist and facility skeletons; phase semantics; required versus optional keys; breakthrough_cost; project_output and prototype reward blocks; ai_will_do.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\科技 装备 学说 制造商 特殊工程模板\\装备模板（陆军）.txt — equipment file location and archetype keys referenced by enable_equipments."
+]

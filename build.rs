@@ -46,9 +46,16 @@ fn main() -> io::Result<()> {
 
     fs::write(&rc_path, windows_resource_script(&icon_path))?;
 
-    compile_resource(&rc_path, &res_path)?;
-
-    println!("cargo:rustc-link-arg-bin=rhoiscribe={}", res_path.display());
+    match compile_resource(&rc_path, &res_path)? {
+        Some(res_path) => {
+            println!("cargo:rustc-link-arg-bin=rhoiscribe={}", res_path.display());
+        }
+        None => {
+            println!(
+                "cargo:warning=no Windows resource compiler found (set RC, or install llvm-rc / Windows SDK rc.exe); building without the embedded icon and version resource"
+            );
+        }
+    }
 
     Ok(())
 }
@@ -119,8 +126,15 @@ fn clean_manifest_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
-fn compile_resource(rc_path: &Path, res_path: &Path) -> io::Result<()> {
+/// Compile the `.rc` script into `.res`.
+///
+/// Returns `Ok(None)` when no resource compiler is available at all, which lets a
+/// source build (or `cargo check`) succeed on machines without the Windows SDK or
+/// LLVM. A compiler that was found but failed still aborts the build, because that
+/// is a real script or toolchain error.
+fn compile_resource(rc_path: &Path, res_path: &Path) -> io::Result<Option<PathBuf>> {
     let mut attempted = Vec::new();
+    let mut compiler_ran = false;
 
     for rc in resource_compilers() {
         let output = match Command::new(&rc)
@@ -140,8 +154,9 @@ fn compile_resource(rc_path: &Path, res_path: &Path) -> io::Result<()> {
             Err(error) => return Err(error),
         };
 
+        compiler_ran = true;
         if output.status.success() {
-            return Ok(());
+            return Ok(Some(res_path.to_path_buf()));
         }
 
         attempted.push(format!(
@@ -152,10 +167,14 @@ fn compile_resource(rc_path: &Path, res_path: &Path) -> io::Result<()> {
         ));
     }
 
-    panic!(
+    if !compiler_ran && env::var_os("RC").is_none() {
+        return Ok(None);
+    }
+
+    Err(io::Error::other(format!(
         "failed to compile Windows resources; install llvm-rc or Windows SDK rc.exe, or set RC\n{}",
         attempted.join("\n")
-    );
+    )))
 }
 
 fn resource_compilers() -> Vec<PathBuf> {

@@ -21,6 +21,11 @@ RHoiScribe is a local MCP server for HOI4 modding agents. Contributions should k
    cargo build --release
    ```
 
+   The Windows icon/version resource is embedded by `build.rs` only when a resource
+   compiler is available (`llvm-rc`, a Windows SDK `rc.exe`, or the `RC` environment
+   variable). Without one the build prints a warning and links no resource, so a plain
+   Rust toolchain is enough to compile and test on any platform.
+
 4. Use Conventional Commits for commits:
 
    ```text

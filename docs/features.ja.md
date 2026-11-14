@@ -41,6 +41,13 @@ inspect_hoi4_scope
 inspect_hoi4_type_rule
 ```
 
+## ナレッジカタログ
+
+- `search_hoi4_knowledge` は組み込みの HOI4 ナレッジカタログを検索し、resource URI を返します。topic は `resources/read` で読みます。
+- 対象は script の基礎、effect、trigger、scope、collection、loop と array 操作、event target、focus tree、event、decision、on_action、scripted GUI と super event、faction、power balance、special project、equipment module と design、building、character と trait、idea と modifier、OOB と開始設定、bookmark、define override、AI strategy と AI area、version migration、workflow ガイダンスです。
+- 検索は大文字小文字を区別しない部分一致で、空白区切りの全 term が一致する必要があります。tags に中国語の同義語が入っているため、中国語の質問も翻訳なしでヒットします。
+- 全 topic は `rhoiscribe://hoi4/knowledge/catalog` で確認できます。
+
 ## プロジェクト品質の確認
 
 - Project index: `index_hoi4_project` は mod root と optional game roots から structured definitions、references、files を返します。
@@ -82,6 +89,10 @@ generate_localisation_batch
 - 書き込みには `approved=true` が必要です。
 - まず existing workspace art を優先してください。user が新しい procedural GUI/GFX assets の作成に同意した後だけ `approved=true` を設定します。
 - animated GUI sprites では existing sprite-sheet conventions と `frameAnimatedSpriteType` knowledge を使い、generated static sprite を animation として扱わないでください。
+- existing art の登録: `register_hoi4_gfx_sprites` は mod 内の画像 directory を走査し、不足している `spriteType` entry を `.gfx` file に追記します。他の tool が出力した画像や手描きの画像を、registration を手書きせずに GUI/GFX で使えるようになります。
+- registration は texture path で照合されるため再実行しても idempotent です。sprite を重複生成せず、既に登録済みの画像、scanned directory 内で file が欠けている登録、名前衝突で skip した画像を report します。
+- `dry_run = true` は追記される block の preview のみを行い、`.gfx` に書き込むのは `dry_run = false` だけです。
+- 名前の形: `sprite_prefix`（既定 `GFX_`）と sanitized した file stem、または `name_style = "relative_path"` の場合は sanitized した相対 path。project の命名規約が大文字なら `uppercase = true` を設定します。
 
 推奨 asset workflow:
 
@@ -89,6 +100,8 @@ generate_localisation_batch
 generate_gui_gfx_asset with dry_run = true
 review returned files and metadata
 generate_gui_gfx_asset with approved=true only after user approval
+register_hoi4_gfx_sprites with dry_run = true
+register_hoi4_gfx_sprites with dry_run = false after review
 ```
 
 ## 環境検出とデバッグ

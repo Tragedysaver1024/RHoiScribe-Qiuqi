@@ -1,0 +1,73 @@
+id = "power_balance.framework"
+
+title = "Power balance (BoP) framework"
+
+category = "power_balance"
+
+file_types = [
+    "txt",
+    "yml",
+]
+
+tags = [
+    "BOP",
+    "power balance",
+    "power_balance",
+    "common/bop",
+    "txt",
+    "range",
+    "on_activate",
+    "on_deactivate",
+    "decision_category",
+    "set_power_balance",
+    "add_power_balance_value",
+    "modifier",
+    "rule",
+    "trigger",
+    "is_power_balance_in_range",
+    "slider",
+    "权力平衡",
+    "平衡值",
+    "阵营平衡",
+    "倾向条",
+    "两派对立",
+    "决议类别",
+    "国策效果",
+    "游戏规则",
+]
+
+body = "A power balance (BoP) is one scalar per country, defined in common/bop/*.txt and drawn as a two-sided bar. The top-level block name is the BoP id that every effect and trigger references.\nLayout: initial_value (start position, usually 0), left_side and right_side (side ids), decision_category (a category id from common/decisions/categories/*.txt; its decisions are the buttons next to the bar), plus a neutral range = { id = mid_range min = -0.1 max = 0.1 modifier = { ... } } that is active inside the middle band. Each side = { id = ... icon = ... range = { ... } } holds one or more range blocks; every range is a decision point with id, min, max, on_activate, on_deactivate, modifier and rule. Ranges must tile the value axis (-1..-0.1, -0.1..0.1, 0.1..1 as in the template) with no gap and no overlap; a gap leaves the value in a state where no range modifier applies at all.\nTiming: on_activate fires once at the instant the value enters the range, on_deactivate fires once when it leaves, modifier applies continuously while the value stays inside, and rule applies game rules for that state. The value never drifts by itself unless something moves it: set_power_balance (id, left_side, right_side, set_default = <bool>, set_value = <decimal>) creates or edits the bar and is required before the bar exists; add_power_balance_value (id, value, tooltip_side) pushes it; add_power_balance_modifier, remove_power_balance_modifier and remove_all_power_balance_modifiers attach static modifiers from common/modifiers/*.txt; set_power_balance_gfx (side, gfx = <sprite>) swaps a side's sprite from interface/*.gfx; remove_power_balance deletes the bar. The national modifiers power_balance_daily and power_balance_weekly drift it every day or week. Read state with has_power_balance { id = ... }, has_any_power_balance = yes, power_balance_value { id = ... value > 0.7 } (also = and <), power_balance_daily_change and power_balance_weekly_change { id = ... value < -0.01 }, is_power_balance_in_range { id = ... range > <range id> } (strict, the named range is excluded), is_power_balance_side_active { id = ... side = <side id> } and has_power_balance_modifier { id = ... modifier = <modifier> }.\nWhat the player sees: the bar with each side's icon and name, the active range's modifier list and rule effects, the decision_category buttons, and the tooltip_side named by the effect that pushed the value.\nPre-ship: ranges cover -1..1 without gap or overlap, ids are unique, decision_category/icon/gfx resolve, every set_power_balance passes both sides and at least one runs at country start (a bar nobody creates never appears), and on_activate/on_deactivate hold instant effects only while long-term effects live in modifier."
+
+syntax_blocks = [
+    "common/bop/my_bop.txt",
+    "my_bop = { initial_value = 0 left_side = my_bop_left right_side = my_bop_right decision_category = my_bop_decisions range = { id = mid_range min = -0.1 max = 0.1 modifier = { } } side = { id = my_bop_left icon = GFX_my_bop_left range = { id = my_bop_left_range min = -1 max = -0.1 on_activate = { } on_deactivate = { } modifier = { } rule = { } } } side = { id = my_bop_right icon = GFX_my_bop_right range = { id = my_bop_right_range min = 0.1 max = 1 modifier = { } } } }",
+    "set_power_balance = { id = my_bop left_side = my_bop_left right_side = my_bop_right set_value = 0.0 }",
+    "add_power_balance_value = { id = my_bop value = -0.1 tooltip_side = my_bop_left }",
+    "power_balance_value = { id = my_bop value > 0.7 }",
+    "is_power_balance_in_range = { id = my_bop range > my_bop_right_range }",
+]
+
+relationships = [
+    "decision_category must resolve to a category declared in common/decisions/categories/*.txt; those decisions are the player's buttons on the bar.",
+    "range modifier and the add_power_balance_modifier effect both point at static modifiers from common/modifiers/*.txt.",
+    "set_power_balance_gfx points at sprites declared in interface/*.gfx, and icon values are sprite names from the same interface files.",
+    "set_power_balance, add_power_balance_value and remove_power_balance are country-scope effects, usable from focuses, events, decisions and on_actions.",
+    "power_balance_daily and power_balance_weekly are national modifiers, not effects; they drift the bar passively.",
+    "is_power_balance_in_range, is_power_balance_side_active and has_power_balance are triggers, usable in visible/available/limit and AI blocks.",
+    "The bar is country-scoped state: two countries can hold the same BoP at different values.",
+]
+
+validation = [
+    "Range coverage: every side range plus the neutral band tiles -1..1 with no gap and no overlap, so exactly one range is active at any value.",
+    "Every set_power_balance supplies id, left_side and right_side, and at least one call runs at country start (on_startup, history, or an initial event) or the bar never appears.",
+    "decision_category exists in common/decisions/categories/*.txt and its decisions reference the same BoP id where they need triggers.",
+    "icon values and every set_power_balance_gfx sprite resolve in interface/*.gfx, and every modifier name exists in common/modifiers/*.txt.",
+    "on_activate and on_deactivate contain instant effects only (flags, values, tooltips); long-term effects sit in modifier so they cannot stack on re-entry.",
+    "BoP, side and range ids are unique across the mod and match the strings used by set_power_balance, add_power_balance_value and the triggers.",
+    "Localisation exists for the BoP, both sides, every range and every modifier tooltip.",
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\权力平衡模板\\权力平衡教学.txt -> common\\bop\\*.txt block layout: initial_value, left_side/right_side, decision_category, neutral range, per-side range with on_activate/on_deactivate/modifier/rule and the -1..1 example bands.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\提词器1.12.txt -> official effect and trigger signatures: set_power_balance (id/left_side/right_side/set_default/set_value), remove_power_balance, add_power_balance_value (value/tooltip_side), add_power_balance_modifier, remove_power_balance_modifier, remove_all_power_balance_modifiers, set_power_balance_gfx (side/gfx), and the has_power_balance / power_balance_value / is_power_balance_in_range / is_power_balance_side_active / has_power_balance_modifier triggers plus power_balance_daily and power_balance_weekly modifiers.",
+]

@@ -1,0 +1,67 @@
+id = "ai.reversed_strategy"
+
+title = "Reversed AI strategy: inverting actor and target in ai_strategy blocks"
+
+category = "ai"
+
+file_types = [
+    "txt"
+]
+
+tags = [
+    "ai_strategy",
+    "reversed",
+    "reversed_ai_strategy",
+    "逆向AI",
+    "逆向AI策略",
+    "人工智能",
+    "AI策略",
+    "战略权重",
+    "主动者",
+    "被动者",
+    "enable_reverse",
+    "abort_when_not_enabled",
+    "allowed",
+    "invade",
+    "support",
+    "common/ai_strategy",
+    "ai_strategy文件",
+    "imgui",
+    "ai_strategy窗口",
+    "reversed_strategy",
+    "gameplay/ai",
+    "txt"
+]
+
+body = "逆向AI策略（Reversed AI Strategy）仍是 common/ai_strategy 里的一种 ai_strategy 定义，只是检测对象被反转：普通策略是“满足 allowed 的国家获得倾向”，逆向策略是“所有满足 enable 的国家成为被动者（目标），由 ai_strategy 的 id 指名的国家（可多个）作为主动者获得对它们的倾向”。所以它天然适合“让某国主动去打所有与它交战的国家”这类一对多关系，不必为每个目标复制一份块。\n\n四个代码块的分工（依源文档）：allowed 不反转，仍在主动者身上检测，因此不要写成 NOT = { tag = BHR } 这种主动者永远无法满足的条件——源文档点名 wiki 示例里的 NOT = { original_tag = BHR } 正是这个错误；反过来写成 always = yes 或 tag = BHR 都不影响谁当被动者。allowed 只在开局、读档、以及 debug 下每次保存并热重载 AI 策略文件时各检测一次；热重载后所有国家的 AI 策略会先全部失效，过几个小时再重新应用，所以重载后立刻判定“没生效”是误判。enable 要求被动者满足：游戏拿着这个块把世界上存在的国家挨个点一遍，满足者即成为被动者，因此一个逆向策略可以有多个被动者，且 enable 会被执行多次。enable_reverse 非必需、没有默认作用域、只执行一次，通常用来检查主动者，必须显式写作用域（如 BHR = { has_government = neutrality }），甚至可写第三方（GER = { has_war = yes }）把第三国状态绑进本策略；若不写作用域，实际大概率作用于玩家正在操作或观看的国家。注意 abort_when_not_enabled 只与 enable 关联、不与 enable_reverse 关联：策略一旦应用，即使 enable_reverse 不再满足也不会被移除。reversed = yes 是逆向标记本身，缺了它整块按普通策略解释（效果正好相反）；写 reversed = no 只是画蛇添足。\n\nid/type/value/ratio 的组合规则：id 是“成为主动者”的国家 tag，type 是倾向种类（invade、support、antagonize、consider_weak、conquer、prepare_for_war、area_priority 等），value 是加到该类倾向上的权重而不是百分比——同一块里同类数值直接相加，源文档给出 1000 与 -450 合成 550，而 consider_weak 的 0 也照样让 IRQ 取得主动者资格。ratio 出现在 front_control（前线比率必须达到多少才启用，默认 0）与 put_unit_buffers（驻防比例）里，是门槛/比例，和 value 的加性权重不是一回事，混用会得到“策略生效但看不到效果”的表象。\n\nworked example（源文档 BHR/QAT 系列）：BHR_invade 定义 allowed 为主动者条件、enable 为 has_war_with = BHR、enable_reverse 为 BHR = { has_template_majority_unit = marine }、abort 为同一条件的 NOT、abort_when_not_enabled = yes、reversed = yes，再挂 ai_strategy = { type = invade id = BHR value = 100 }。去掉 reversed = yes，效果是所有与 BHR 交战的国家提高登陆 BHR 的倾向；加上之后反过来，BHR 提高登陆所有与它交战国家的倾向。同一块里写多个 id 是已知 bug：所有列出的主动者都会吃到全部条目，四个各 1000 的 invade 会让四国都得到 4000；要让大家同得 1000，就只写一条 1000、其余写 0。同一思路在 WW2 场景（英美对德意）下的写法见 ai_areas 教程：allowed = { or = { original_tag = ENG original_tag = USA } } 配 enable = { or = { has_war_with = GER has_war_with = ITA } }，正是这类一对多组合的实战形态。\n\npitfalls：把普通策略“镜像”一份却不写 reversed = yes，等于在原方向又加了一次权重；忘写 enable 使被动者集合为空，永远不生效；把 allowed 写给被动者，主动者永远满足不了；AI 策略不能自指，同一国既是主动者又是被动者时该组合无效；把 value 当百分比；热重载后没等几个小时就判无效；未知 type 会刷日志错误。调试用控制台 imgui show ai_strategy 打开窗口：Active strategies 里逆向项显示为 <策略名> (reverse <被动者tag>)，Strategy values 的 Token/Target/Weighted Value 三列给出最终加权数值，窗口默认太小需拖右下角蓝三角放大。"
+
+syntax_blocks = [
+    "BHR_invade = { allowed = { NOT = { tag = BHR } } enable = { has_war_with = BHR } enable_reverse = { BHR = { has_template_majority_unit = marine } } abort = { NOT = { BHR = { has_template_majority_unit = marine } } } abort_when_not_enabled = yes reversed = yes ai_strategy = { type = invade id = BHR value = 100 } }",
+    "BHR_support_neutrals = { allowed = { NOT = { original_tag = BHR } } enable = { has_government = neutrality } enable_reverse = { BHR = { has_government = neutrality } } reversed = yes abort_when_not_enabled = yes ai_strategy = { type = support id = BHR value = 100 } }",
+    "ai_strategy = { type = invade id = BHR value = 1000 } ai_strategy = { type = invade id = YEM value = 0 } ai_strategy = { type = invade id = SAU value = 0 } ai_strategy = { type = invade id = IRQ value = 0 }",
+    "ai_strategy = { type = invade id = YEM value = -450 } ai_strategy = { type = antagonize id = SAU value = 200 } ai_strategy = { type = consider_weak id = IRQ value = 0 }",
+    "imgui show ai_strategy"
+]
+
+relationships = [
+    "被 ai.ai_strategy 覆盖的同一文件族：本文件讲逆向（reversed）写法，不再重复普通 ai_strategy 的 type 清单。设置倾向用的 add_ai_strategy 写在国内策/事件/决议里，而逆向策略只能写成文件里的具名块。",
+    "ai_strategy 块内的 area = 需要先在 common/ai_areas 里定义，见 ai.areas。",
+    "决定 AI 造什么师的是 ai_template 与 ai_equipment；enable_reverse 里常用 has_template_majority_unit 把模板与策略绑在一起。",
+    "allowed/enable 的检测频率差异决定了性能：把条件放在 enable_reverse（执行一次）比放在 enable（每国一遍）便宜。",
+    "imgui 的 ai_strategy 窗口同时显示 Active strategies 与 Strategy values，是验证逆向策略是否真的反向的唯一直接手段。"
+]
+
+validation = [
+    "每个逆向块都必须显式带 reversed = yes，且与同文件中的普通策略分块放置，避免复制时漏标记。",
+    "检查 allowed 的条件能被主动者满足（至少一条路径可达），不要出现 NOT = { tag = <主动者> } 这类自相矛盾的写法。",
+    "确认 enable 至少能让一个被动者命中；被动者集合为空时策略静默失效，日志不一定报错。",
+    "同一块里多写 id 时按“一条给值、其余写 0”处理，避免所有主动者吃到全部数值而叠加成 4000 这类超量权重。",
+    "value 视为可加的权重而非百分比，给出负数前确认同类型已有条目与最终合计。",
+    "不要在 enable_reverse 里省作用域；需要第三国状态时显式写 TAG = { ... }。",
+    "热重载 AI 策略文件后至少等游戏内数小时再判断生效，并用 imgui show ai_strategy 的 Weighted Value 列核对。"
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\AI模板\\逆向AI策略（Reversed AI Strategy）简明教程.md — 概念、allowed/enable/enable_reverse/reversed 的分工与检测频率、BHR/QAT 完整示例、多 id 相加 bug、imgui ai_strategy 窗口说明",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\AI模板\\AI战略编写模板扩充版 原作者：希儿（憨批）.txt — 策略种类清单（invade/support/antagonize/consider_weak/conquer/prepare_for_war/area_priority 等）、front_control 的 ratio/priority/ordertype 语义、add_ai_strategy 用法"
+]

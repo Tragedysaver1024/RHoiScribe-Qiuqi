@@ -1,0 +1,80 @@
+id = "scripted_gui.super_events"
+
+title = "HOI4 super events: event to scripted GUI pipeline"
+
+category = "scripted_gui"
+
+file_types = [
+    "txt",
+    "gui",
+    "gfx",
+    "asset",
+    "yml"
+]
+
+tags = [
+    "super_events",
+    "超事件",
+    "scripted_gui",
+    "脚本化GUI",
+    "scripted_localisation",
+    "脚本化本地化",
+    "defined_text",
+    "se_display",
+    "global_variable",
+    "全局变量",
+    "popup",
+    "弹窗",
+    "localization_key",
+    "GFX_sprite",
+    "play_song",
+    "music_station",
+    "alignment",
+    "居中",
+    "event",
+    "事件",
+    "txt",
+    "gfx",
+    "ui_overlay",
+    "yml"
+]
+
+body = "Pipeline: event option -> SE_center effect -> set_variable global.se_display -> scripted GUI CM_SE_main_container turns visible -> five scripted-localisation blocks resolve picture, title, desc, quote, button -> exit button clears flag and variable.\n1 Event: common/events/SE_test.txt, add_namespace = SE_test, country_event id = SE_test.1, title = SE_test.1.t, desc = SE_test.1.d, is_triggered_only = yes, hidden = no. The option sets SE_center = yes and runs hidden_effect = { set_variable = { global.se_display = 1 } play_song = se_song_of_japanese_youth }; SE_center is also repeated inside hidden_effect, harmless.\n2 Effect: common/scripted_effects/CM_big_event_scripted_effects.txt holds only SE_center = { set_global_flag = CM_SE_center }, a one-line alias so the option reads like a switch; the flag later selects alignment.\n3 Visibility: common/scripted_guis/CM_superevent_gui.txt declares CM_SE_main_container with window_name = CM_SE_main_container, context_type = player_context, visible = { has_variable = global.se_display  is_ai = no }. Nothing opens the window: it exists while the variable exists, so event and GUI couple by data, not by a call.\n4 Text: five defined_text blocks in common/scripted_localisation, one file each: CM_SE_getpicture (CM_SE_0_gfx_sprite.txt), CM_SE_title (CM_SE_1_title.txt), CM_SE_desc (CM_SE_2_desc.txt), CM_SE_quote (CM_SE_3_quote.txt), CM_SE_btn (CM_SE_4_option.txt). Each holds text = { trigger = { check_variable = { global.se_display = 0001 } } localization_key = ... } rows, one per serial, closed by an empty-trigger fallback (GFX_CM_SE_pic_entry, CM_SE_title_missing, CM_SE_desc_missing, CM_SE_quote_missing, CM_SE_btn_missing).\n5 Naming per serial NNNN: GFX_CM_SE_NNNN for the picture, then CM_SE_title_NNNN, CM_SE_desc_NNNN, CM_SE_quote_NNNN, CM_SE_btn_NNNN. The defined_text name never carries the number, only localization_key does; the picture arrives through image = [CM_SE_getpicture], so the scripted loc returns a sprite name declared in a .gfx.\n6 Alignment: CM_SE_desc_left_visible = { NOT = { has_global_flag = CM_SE_center } } and CM_SE_desc_center_visible = { has_global_flag = CM_SE_center } hide one of two description boxes; centring is scripted state, not layout.\n7 Close: CM_SE_exit_btn_click = { clr_global_flag = CM_SE_center  clear_variable = global.se_display }. Both clears are required: the container is shared by every event, so variable and flag are its only state, and a leftover flag centres the next event while a leftover variable keeps the window on top until the next click.\n8 Music: music/cm_big_event.txt declares music_station = cm_big_event and music = { song = ...  chance = { factor = 0 } } rows, so the station never picks these tracks; they play only via play_song in the option. No .asset for the ogg files is in this folder.\n9 No show_super_event and no window-open effect exist here: this is a non-pausing scripted GUI overlay, unlike a vanilla super event that pauses and uses its own window."
+
+syntax_blocks = [
+    "scripted_gui = { CM_SE_main_container = { window_name = CM_SE_main_container  context_type = player_context  visible = { has_variable = global.se_display  is_ai = no }  triggers = { CM_SE_desc_left_visible = { NOT = { has_global_flag = CM_SE_center } }  CM_SE_desc_center_visible = { has_global_flag = CM_SE_center } }  effects = { CM_SE_exit_btn_click = { clr_global_flag = CM_SE_center  clear_variable = global.se_display } }  properties = { CM_SE_picture_positioning_entry = { image = [CM_SE_getpicture] } } } }",
+    "defined_text = { name = CM_SE_title  text = { trigger = { check_variable = { global.se_display = 0001 } } localization_key = CM_SE_title_0001 }  text = { trigger = { } localization_key = CM_SE_title_missing } }",
+    "option = { name = SE_test.1.a  SE_center = yes  hidden_effect = { set_variable = { global.se_display = 1 }  play_song = se_song_of_japanese_youth } }",
+    "music_station = cm_big_event  music = { song = se_die_wacht_am_rhein  chance = { factor = 0 } }"
+]
+
+relationships = [
+    "scripted_gui.dynamic_lists covers dynamic_lists, entry_container, value and index; this file deliberately does not restate list mechanics.",
+    "gui.gfx_sprites owns the .gfx registration that GFX_CM_SE_NNNN depends on.",
+    "scripted_localisation.entries owns the defined_text row grammar reused by CM_SE_title, CM_SE_desc, CM_SE_quote and CM_SE_btn.",
+    "interface.assets_fonts covers the fonts used inside the container window and the .asset music registration.",
+    "The event layer (events txt) is the only trigger side; the GUI layer never fires the event."
+]
+
+validation = [
+    "Every serial referenced by an option has all five keys: GFX_CM_SE_NNNN registered as a spriteType in a .gfx, plus CM_SE_title_NNNN, CM_SE_desc_NNNN, CM_SE_quote_NNNN and CM_SE_btn_NNNN in localisation. A missing sprite renders an empty frame, a missing text key renders raw key text.",
+    "Match key type to slot: the picture row must resolve to a sprite name, the four text rows to localisation keys. The pack's own notes name a wrongly typed localisation key as the cause of a near-invisible bug, and the header line of every localisation file must be preserved when keys are added.",
+    "The exit effect clears both clr_global_flag = CM_SE_center and clear_variable = global.se_display; with only one cleared, the next event inherits centring or the container stays on screen.",
+    "Each defined_text keeps a final empty-trigger fallback row (CM_SE_title_missing, CM_SE_desc_missing, CM_SE_quote_missing, CM_SE_btn_missing, GFX_CM_SE_pic_entry), otherwise an unmapped serial shows nothing at all.",
+    "Keep the trigger event non-pausing and scripted-GUI based: is_triggered_only = yes, hidden = no, and no show_super_event or pause, since neither exists in this pack.",
+    "Fix the template's own defects before shipping: music/cm_big_event.txt has three music blocks and only two closing braces, and events/SE_test.txt nests a second country_event inside an option and reuses the Bavaria namespace; check brace balance and namespace per file.",
+    "Do not redefine a defined_text name: CM_SE_getpicture, CM_SE_title, CM_SE_desc, CM_SE_quote and CM_SE_btn are unique mod-wide, and a second definition of the same name merges or wins silently."
+]
+
+source_refs = [
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\必读：4685的总结与反面教材.txt — the pipeline walkthrough and the pitfall list: per-serial key set, container tied to global.se_display, .gfx registers the picture, .gui places it, localisation header warning, music station behaviour.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\common\scripted_guis\CM_superevent_gui.txt — CM_SE_main_container, window_name, context_type = player_context, visible on has_variable global.se_display, the two alignment triggers, CM_SE_exit_btn_click cleanup and the image property.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\common\scripted_localisation\CM_SE_0_gfx_sprite.txt — CM_SE_getpicture with GFX_CM_SE_0001 to 0010 and the GFX_CM_SE_pic_entry fallback.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\common\scripted_localisation\CM_SE_1_title.txt — CM_SE_title rows CM_SE_title_0001..0010 plus CM_SE_title_missing fallback.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\common\scripted_localisation\CM_SE_2_desc.txt — CM_SE_desc rows CM_SE_desc_0001..0010 plus CM_SE_desc_missing fallback.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\common\scripted_localisation\CM_SE_3_quote.txt — CM_SE_quote rows CM_SE_quote_0001..0010 plus CM_SE_quote_missing fallback.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\common\scripted_localisation\CM_SE_4_option.txt — CM_SE_btn rows CM_SE_btn_0001..0010 plus CM_SE_btn_missing fallback.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\common\scripted_effects\CM_big_event_scripted_effects.txt — the whole file is SE_center = { set_global_flag = CM_SE_center }.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\events\SE_test.txt — option shape SE_center plus hidden_effect set_variable play_song, and the nested second country_event defect.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\music\cm_big_event.txt — music_station = cm_big_event with chance factor = 0 rows and its unbalanced braces.'
+]

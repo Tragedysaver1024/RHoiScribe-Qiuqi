@@ -1,0 +1,81 @@
+RHoiScribe -- Qiuqi Library Edition
+===================================
+
+This repository is a MODIFIED VERSION (a fork) of RHoiScribe.
+
+It is not the original project, and it is not endorsed by the original author
+unless a later upstream commit says otherwise. Bug reports and support requests
+about this edition belong here, not in the upstream issue tracker.
+
+Upstream project
+----------------
+  Name:        RHoiScribe -- Local MCP server and SKILL for Hearts of Iron IV
+               modding agents
+  Author:      CzXieDdan
+  Repository:  https://github.com/czxieddan/RHoiScribe
+  License:     GNU Affero General Public License v3.0 or later
+  Copyright:   (C) 2026 CzXieDdan
+
+Knowledge sources
+-----------------
+  The knowledge topics added by this edition are condensed and rewritten from
+  秋起图书馆 / QIUQI LIBRARY ("Autumn Library"), a Chinese-language Hearts of Iron
+  IV modding library distributed as a Steam Workshop item:
+
+    Steam Workshop item 3445449478
+    Game app id 394360 (Hearts of Iron IV)
+    https://steamcommunity.com/sharedfiles/filedetails/?id=3445449478
+
+  The library itself is a curated collection of community tutorials, templates,
+  prompt sheets and tools. Where a topic relies on a specific document, the topic
+  records the source path in its `source_refs` field under
+  `resources/knowledge/hoi4/**`, so every claim can be traced back to the file it
+  came from. No game files, no binary assets and no verbatim long-form tutorial
+  text are redistributed here; the bodies are condensed English rewrites.
+
+License of this edition
+-----------------------
+  GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later), the same
+  license as upstream. See LICENSE for the full text. Because this edition is
+  distributed under the AGPL, the complete corresponding source of this edition
+  is this repository; if you run a modified version as a network service, you
+  must offer its source to the users of that service.
+
+  Copyright (C) 2026 CzXieDdan (upstream RHoiScribe)
+  Modifications in this edition: see "Changes in this edition" below.
+
+Changes in this edition
+-----------------------
+  Date: 2026-11-14
+
+  1. Knowledge catalog expanded from 66 topics / 117 KB to 85 topics / 275 KB,
+     adding: faction goals, rules, templates and initiative; power balance (BOP);
+     collections; loops and array operations; event targets; scripted GUI
+     super-events and window framework; version migration (1.13 / 1.15 / 1.16.9
+     -> 1.17.3); define overriding; special projects; equipment modules and
+     designs; building slots and construction; character traits; ideas and
+     modifier reference; OOB and start-of-game setup; bookmark scenario
+     selection; reversed AI strategy; AI areas and AI templates.
+     Bodies are English; tags carry Chinese synonyms so Chinese queries match.
+
+  2. New MCP tool `register_hoi4_gfx_sprites`: scans an existing image directory
+     inside a mod workspace, reads every `interface/**/*.gfx` first, and appends
+     only the missing `spriteType` registrations to a `.gfx` file. Idempotent by
+     texture path, reports already-registered sprites, orphaned registrations
+     whose texture file is gone, and skipped name collisions. Ships with unit and
+     end-to-end tests.
+
+  3. `build.rs`: the Windows icon/version resource is now optional. When no
+     resource compiler is available (`llvm-rc`, a Windows SDK `rc.exe`, or `RC`),
+     the build prints a warning and links no resource instead of panicking, so the
+     project compiles with a plain Rust toolchain on any platform. A compiler that
+     is found but fails is still a hard error.
+
+  4. Documentation: `docs/features.*` (en, zh-CN, ja, ru) document the new tool
+     and the knowledge catalog; CONTRIBUTING.md explains the optional resource
+     compiler; README and localized READMEs carry the modified-edition notice.
+
+Trademarks and game content
+---------------------------
+  Hearts of Iron IV is a trademark of Paradox Interactive AB. This repository
+  ships no game content; it contains documentation, prompts and source code only.

@@ -1,0 +1,73 @@
+id = "bookmarks.scenario_selection"
+
+title = "Bookmark spec: scenario files, interesting countries and selection panel"
+
+category = "bookmarks"
+
+file_types = [
+    "txt",
+    "yml",
+    "gui"
+]
+
+tags = [
+    "bookmarks",
+    "剧本",
+    "scenario_selection",
+    "剧本选择",
+    "common/bookmarks",
+    "interesting_country",
+    "有趣的国家",
+    "major_country",
+    "主要国家",
+    "minor",
+    "次要国家",
+    "default_country",
+    "开局国家",
+    "filters",
+    "label_order",
+    "sort_unplayed_first",
+    "required_dlc",
+    "assume_not_played_if_missing_data",
+    "randomize_weather",
+    "effect_block",
+    "frontendgamesetupview",
+    "localisation",
+    "txt",
+    "gui"
+]
+
+body = "Bookmarks live in common/bookmarks/*.txt; each file holds one bookmark node under bookmarks = { bookmark = { ... } }. Vanilla ships blitzkrieg.txt (1939) and the_gathering_storm.txt (1936); both are force-loaded, so replacing them for real means editing interface/frontendgamesetupview.gui.\nDefinitions: an interesting country is any TAG defined inside a bookmark whose focus tree is not the default tree; a major country is any country that is not a minor, so a TAG without minor = yes counts as major, and majors are forced to be interesting countries. The selection panel fills countries_grid with majors and countries_mini with minor = yes entries, in the order their TAG blocks appear in the file.\nBookmark keys: name (localisation key), desc, date = YY.MM.DD.HH (default 2.1.1.1, and it cannot be earlier), picture = \"GFX_select_date_1936\", default_country = \"GER\" (must be one of this bookmark's interesting countries), default = yes/no, filters = { new_content continent } (order by a predefined array) or label_order = { label_1 label_2 } (custom order, every label localised; vanilla orders by continent: Europe, North America, South America), sort_unplayed_first (default yes), include_majors_in_minor_list (default yes), apply_filter_to_majors (default no; yes makes the majors obey the filter), apply_filter_to_other_country (default no; yes adds the other countries to the list), scrollable_country_list (default no; yes stacks filters vertically instead of horizontally).\nPer-TAG block: history = \"TAG_GATHERING_STORM_DESC\", ideology = <ideology_id>, available = { ... } (condition block, usually DLC probes), label = { label_1 }, required_dlc = { \"La Resistance\" }, version = la_resistance (default base_game), override_leader_portrait = GFX_... (falls back to the real leader), assume_not_played_if_missing_data = yes/no, minor = yes/no, ideas = { ... } and focuses = { ... } with at most 3 entries each. ideas and focuses are display lists for the selection screen only; they neither set nor depend on the real start state.\nThe \"---\" node is the empty-flag option: it lets the player start with no country (black flag) and only takes history. effect = { randomize_weather = 22345 } is obligatory in every bookmark."
+
+syntax_blocks = [
+    "bookmarks = { bookmark = { name = BM_1936 desc = BM_1936_DESC date = 1936.1.1.12 picture = \"GFX_select_date_1936\" default_country = \"GER\" default = yes } }",
+    "filters = { new_content continent } + label_order = { label_1 label_2 } + sort_unplayed_first = yes + include_majors_in_minor_list = yes + apply_filter_to_majors = no + apply_filter_to_other_country = no + scrollable_country_list = no",
+    "GER = { history = \"GER_GATHERING_STORM_DESC\" ideology = fascism label = { label_1 } required_dlc = { \"La Resistance\" } version = la_resistance ideas = { GER_idea_a GER_idea_b GER_idea_c } focuses = { GER_focus_a GER_focus_b } }",
+    "minor = yes block: \"---\" = { history = OTHER_SCENARIO2_DESC } for the empty-flag option, and a minor TAG keeps minor = yes so it renders in the small-flag list",
+    "effect = { randomize_weather = 22345 } — obligatory inside every bookmark node",
+    "assume_not_played_if_missing_data = yes + override_leader_portrait = GFX_portrait_TAG_leader"
+]
+
+relationships = [
+    "bookmarks.start_dates is the shallow entry (date, selectable, localisation); this entry is the full key spec plus panel semantics and the interesting/major definitions.",
+    "history.countries must define the ideology, ideas and focuses that a bookmark block only displays, so the shown spirits match the actual start state.",
+    "focus.basic_tree supplies the focus ids used by focuses, and a non-default tree is what makes a TAG an interesting country.",
+    "history.oob_start_setup and history.units_oob describe the start state that a bookmark's date and default_country imply.",
+    "localisation.encoding governs the name, desc, label and per-country history keys, which are only localisation references inside the bookmark file."
+]
+
+validation = [
+    "Confirm date is written as YY.MM.DD.HH in a valid range, is not earlier than the 2.1.1.1 default, and matches the history files that exist for that date.",
+    "Confirm default_country is a TAG declared in the same bookmark and that its focus tree is not the default one, otherwise the bookmark falls back unpredictably.",
+    "Confirm effect = { randomize_weather = <province or state id> } exists in every bookmark node; it is described as obligatory.",
+    "Count ideas and focuses per TAG block and confirm at most 3 of each, and that every id really exists in common/ideas and common/national_focus.",
+    "Confirm each label used in label_order is also assigned in a TAG block and is localised, otherwise the filter shows an empty or raw key.",
+    "Confirm required_dlc and version agree with the available = { ... } condition block, so the block hides cleanly on a missing DLC.",
+    "Confirm TAG blocks are ordered as intended, since the panel reads majors and minor = yes entries in file order."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\剧本模板\\Bookmarks模板（26.6.27 by 秋起.修）.txt — the 85-line primary source: every bookmark key (name, desc, date, picture, default_country, default, filters, label_order, sort_unplayed_first, include_majors_in_minor_list, apply_filter_to_majors, apply_filter_to_other_country, scrollable_country_list), the per-TAG block (history, ideology, available, label, required_dlc, version, override_leader_portrait, assume_not_played_if_missing_data, ideas, focuses, minor), the \"---\" empty-flag option and the obligatory randomize_weather effect.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\GUI\\剧本及有趣的国家界面修改(2025.11.9).txt — interface/frontendgamesetupview.gui layout: the bookmarks_grid read order, the force-loaded vanilla pair blitzkrieg.txt and the_gathering_storm.txt, how max_slots_horizontal and max_slots_vertical control the scenario grid, and the countries_grid (majors) versus countries_mini (minor = yes) split.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\提词器1.12.txt — effect syntax background for randomize_weather and the generic effect-list rules that a bookmark effect block follows."
+]

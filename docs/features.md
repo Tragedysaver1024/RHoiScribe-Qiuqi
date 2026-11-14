@@ -41,6 +41,13 @@ inspect_hoi4_scope
 inspect_hoi4_type_rule
 ```
 
+## Knowledge Catalog
+
+- `search_hoi4_knowledge` searches the embedded HOI4 knowledge catalog and returns resource URIs; read a topic with `resources/read`.
+- Coverage includes script basics, effects, triggers, scopes, collections, loops and array operations, event targets, focus trees, events, decisions, on_actions, scripted GUI and super events, factions, power balance, special projects, equipment modules and designs, buildings, characters and traits, ideas and modifiers, OOB and start setup, bookmarks, define overrides, AI strategies and AI areas, version migration, and workflow guidance.
+- Search is case-insensitive substring matching and requires every whitespace-separated term to appear in the topic. Tags carry Chinese synonyms, so Chinese queries resolve without translation.
+- List every topic through `rhoiscribe://hoi4/knowledge/catalog`.
+
 ## Project Quality Tools
 
 - Project index: `index_hoi4_project` returns structured definitions, references, and files for a mod root and optional game roots.
@@ -82,6 +89,10 @@ The returned file path should stay under a valid `localisation/<language>/` tree
 - Writing requires `approved=true`.
 - Prefer existing workspace art first. Set `approved=true` only after the user agrees to create new procedural GUI/GFX assets instead of reusing existing project art.
 - For animated GUI sprites, use existing sprite-sheet conventions and `frameAnimatedSpriteType` knowledge instead of assuming a generated static sprite is animated.
+- Registering existing art: `register_hoi4_gfx_sprites` scans an image directory under the mod and appends the missing `spriteType` entries to a `.gfx` file, so artwork produced by other tools or by hand becomes usable in GUI and GFX work without writing registrations by hand.
+- Registrations are matched by texture path, so re-running the tool is idempotent, never duplicates a sprite, and reports images that are already registered, registered-but-missing files under the scanned directory, and skipped names.
+- `dry_run = true` previews the block that would be appended; only `dry_run = false` touches the `.gfx` file.
+- Name shape: `sprite_prefix` (default `GFX_`) plus the sanitized file stem, or the sanitized relative path when `name_style = "relative_path"`. Set `uppercase = true` when the project's naming convention wants it.
 
 Recommended asset workflow:
 
@@ -89,6 +100,8 @@ Recommended asset workflow:
 generate_gui_gfx_asset with dry_run = true
 review returned files and metadata
 generate_gui_gfx_asset with approved=true only after user approval
+register_hoi4_gfx_sprites with dry_run = true
+register_hoi4_gfx_sprites with dry_run = false after review
 ```
 
 ## Environment And Debug

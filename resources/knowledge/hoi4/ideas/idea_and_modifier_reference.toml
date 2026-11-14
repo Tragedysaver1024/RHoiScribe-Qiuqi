@@ -1,0 +1,65 @@
+id = "ideas.modifier_reference"
+
+title = "Idea and national-spirit structure with valid country modifier keys"
+
+category = "ideas"
+
+file_types = [
+    "txt",
+    "yml",
+    "gfx"
+]
+
+tags = [
+    "ideas",
+    "idea_modifier",
+    "national_spirit",
+    "modifier_keys",
+    "law",
+    "dynamic_modifier",
+    "country_scope",
+    "research_bonus",
+    "equipment_bonus",
+    "民族精神",
+    "国家精神",
+    "修正",
+    "法案",
+    "提词器",
+    "common/ideas",
+    "txt"
+]
+
+body = "Idea and national-spirit reference (民族精神 / 国家精神 / 修正). Ideas live in common/ideas/*.txt inside ideas = { country = { <id> = { ... } } }; hidden_ideas and the manufacturer categories naval_manufacturer materiel_manufacturer tank_manufacturer aircraft_manufacturer industrial_concern sit beside country. A country spirit takes picture (sprite name with GFX_idea_ removed), on_add, on_remove, do_effect (apply condition), cancel (removal condition), modifier, equipment_bonus = { armor = { build_cost_ic = -0.5 instant = yes } }, research_bonus = { construction_tech = 0.1 } and rule = { can_create_factions = yes }. Manufacturers add allowed (start-only), visible (re-checked), available (clickable), traits and ai_will_do. Laws (法案) are the same file type but the category block sets law = yes and use_list_view = yes under economy / trade_laws / mobilization_laws, and each law takes cost, removal_cost, available, modifier, default = yes, cancel_if_invalid; a new law category needs slot = government or slot = research_production. National spirits are permanent country ideas; laws are one-active-per-type entries paid with political power; dynamic modifiers are not ideas - effects attach them with add_dynamic_modifier and variables drive them. Keys by domain: political power and stability political_power_factor political_power_gain stability_factor stability_weekly; war support war_support_factor war_support_weekly; factory and construction industrial_capacity_factory industrial_capacity_dockyard production_factory_max_efficiency_factor production_factory_efficiency_gain_factor production_speed_buildings_factor consumer_goods_factor global_building_slots_factor; manpower conscription conscription_factor non_core_manpower weekly_manpower local_manpower monthly_population; research research_speed_factor plus research_bonus (industry_research electronics_research land_doctrine_research); army navy air combat army_attack_factor army_defence_factor army_org_factor army_morale_factor breakthrough_factor combat_width_factor naval_speed_factor naval_strike air_attack_factor air_agility_factor air_superiority_efficiency; resistance and compliance resistance_target resistance_growth compliance_gain; fuel and supply max_fuel_factor fuel_gain_factor supply_consumption_factor out_of_supply_factor local_supplies. Pitfalls: each modifier key must appear exactly once inside a spirit block - a repeated key is silently collapsed and the tooltip diverges from the real effect; unknown or misspelled keys never error, they silently no-op, so check every key against this list; a law swap needs a working available block or it stays greyed out, and cancel_if_invalid decides whether a broken law is dropped; equipment_bonus without instant = yes does not apply at once; picture must be a registered .gfx sprite; an idea id collides with advisor idea_token (has_idea); disabled_ideas = 1 blocks cabinet and law changes."
+
+syntax_blocks = [
+    "ideas = { country = { my_spirit = { picture = my_spirit modifier = { stability_factor = 0.05 } } } }",
+    "ideas = { country = { my_spirit = { modifier = { political_power_factor = 0.1 } equipment_bonus = { armor = { build_cost_ic = -0.5 instant = yes } } research_bonus = { construction_tech = 0.1 } rule = { can_create_factions = yes } } } }",
+    "ideas = { economy = { law = yes use_list_view = yes my_law = { cost = 150 removal_cost = -1 modifier = { consumer_goods_factor = -0.05 } default = yes cancel_if_invalid = no } } }",
+    "ideas = { industrial_concern = { my_concern = { allowed = { original_tag = TAG } visible = { } available = { } modifier = { industrial_capacity_factory = 0.1 } ai_will_do = { factor = 1 } } } }",
+    "add_dynamic_modifier = { modifier = my_dynamic_modifier }"
+]
+
+relationships = [
+    "Ideas reuse the same country-scope modifier keys as traits and dynamic modifiers.",
+    "Idea ids and advisor idea_token share the has_idea lookup, so they must not collide.",
+    "National spirits, hidden ideas, manufacturers and laws are sibling categories of one ideas block.",
+    "Dynamic modifiers cover variable-driven buffs that would otherwise need many spirits.",
+    "research_bonus and equipment_bonus are the only blocks for research and equipment scoped values."
+]
+
+validation = [
+    "Each modifier key must appear exactly once per block and must exist in the verified key list.",
+    "Confirm the entry sits in the right category block (country, hidden_ideas, manufacturer, economy/trade_laws/mobilization_laws).",
+    "Check picture resolves to a registered .gfx sprite once the GFX_idea_ prefix is removed.",
+    "For laws verify available, default and cancel_if_invalid, and register a new law category with slot = government or research_production.",
+    "Check the id does not collide with a vanilla idea or any advisor idea_token.",
+    "Localise name and description for every shipped language.",
+    "Do not add disabled_ideas unless the design intentionally freezes cabinet and law changes."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\钢4国家精神代码.txt - primary country-scope modifier key list (army, navy, air, occupation, intelligence, government, cabinet, factory, construction, AI), targeted_modifier, research_bonus categories, equipment_bonus categories and the rule block.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\idea类模板\\民族精神模板.txt - ideas = { country = ... } and hidden_ideas structure, picture, allowed_civil_war, do_effect, cancel, equipment_bonus, research_bonus, rule, plus manufacturer allowed/visible/available/traits.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\idea类模板\\法案模板.txt - law = yes, use_list_view, cost, removal_cost, available, default, cancel_if_invalid and the slot = government / research_production registration note.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\钢4人物trait分类参考.txt - weekly and percentage conventions for stability_factor, war_support_weekly, party_popularity_stability_factor and the factory/research keys."
+]

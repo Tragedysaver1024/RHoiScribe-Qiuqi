@@ -1,0 +1,74 @@
+id = "history.oob_start_setup"
+
+title = "Full start setup: country history, OOB, production lines and stockpile"
+
+category = "history"
+
+file_types = [
+    "txt"
+]
+
+tags = [
+    "start_setup",
+    "开局设置",
+    "history/countries",
+    "history/units",
+    "国家历史文件",
+    "oob",
+    "战斗序列",
+    "division_template",
+    "师模板",
+    "production_lines",
+    "生产线",
+    "instant_effect",
+    "initial_stockpile",
+    "初始库存",
+    "add_equipment_to_stockpile",
+    "equipment_variant",
+    "装备变体",
+    "set_research_slots",
+    "科研槽",
+    "add_ideas",
+    "set_politics",
+    "naval_oob",
+    "air_wings",
+    "txt"
+]
+
+body = "Start-setup recipe: history/countries/TAG.txt declares the country, history/units/TAG_*.txt supplies the army, and every division_template must be defined above the units block that uses it or the units are silently dropped.\n(1) history/countries/TAG.txt, named '<TAG> - <Country>.txt': capital = <province id>; oob = \"TAG_1936\" (same slot as set_oob); set_naval_oob = \"TAG_1936_naval\"; set_air_oob = \"TAG_1936_air\"; set_research_slots = 3; set_stability, set_war_support; set_technology = { infantry_weapons = 1 } with one tech id per line; add_ideas = { ... } for spirits, laws and advisors alike; set_politics = { ruling_party = neutrality last_election = \"1932.11.8\" election_frequency = 48 }; set_convoys, starting_train_buffer; create_equipment_variant; unlock_subunit = fire_support for TAOG.\n(2) Template: division_template = { name = \"Infantry Division\" division_names_group = TAG_INF_01 regiments = { infantry = { x = 0 y = 0 } } regimental_support = { field_guns = { x = 1 y = 0 } } support = { engineer = { x = 0 y = 0 } } priority = 1 }, plus division_cap and is_locked. x is the column, y the row, no two battalions may share an (x,y), support is x = 0 with y ascending, regimental_support sits between them at x = 1. priority: 0 reserve, 1 default, 2 elite.\n(3) Instantiation: units = { division = { name = \"1st Infantry Division\" location = 12345 division_template = \"Infantry Division\" start_experience_factor = 0.3 start_equipment_factor = 0.5 start_manpower_factor = 0.3 force_equipment_variants = { medium_tank_chassis_1 = { owner = \"TAG\" } } } }. division_name = { is_name_ordered = yes name_order = 1 } replaces name; experience bands are 0.1, 0.3, 0.75, 0.9.\n(4) Production and stockpile: instant_effect = { add_equipment_production = { equipment = { type = infantry_equipment_1 creator = TAG } requested_factories = 3 progress = 0.1 efficiency = 50 industrial_manufacturer = mio:TAG_manufacturer_organization } } and add_equipment_to_stockpile = { type = infantry_equipment amount = 500 producer = TAG variant_name = \"...\" }. In a country history file leave out creator and version_name (equipmentvariant.cpp:1103).\n(5) Navy: units = { fleet = { name = \"Home Fleet\" naval_base = <state id> task_force = { ship = { name = \"HMS Nelson\" definition = battleship equipment = { ship_hull_heavy_1 = { amount = 1 owner = ENG } } } } } }; MTG ship_hull_* and legacy battleship_1 never mix.\n(6) Air: air_wings = { <state id> = { small_plane_airframe_0 = { owner = \"TAG\" amount = 80 } name = \"JG 132\" } }; the state needs an air base.\nPitfalls: a template defined after its units, a location outside land provinces 1-9399, or an air wing on a state without an airfield silently drops the unit to the log; keyword typos such as request_factories or equipment_type fail silently; NSB force_equipment_variants needs chassis ids; regimental_support without TAOG is a parse error, so gate it with has_dlc; end with a blank line and UTF-8 without BOM."
+
+syntax_blocks = [
+    "history/countries/TAG.txt: capital = 123 oob = \"TAG_1936\" set_naval_oob = \"TAG_1936_naval\" set_air_oob = \"TAG_1936_air\" set_research_slots = 3",
+    "set_technology = { infantry_weapons = 1 } + add_ideas = { TAG_spirit } + set_politics = { ruling_party = neutrality last_election = \"1932.11.8\" election_frequency = 48 elections_allowed = yes }",
+    "division_template = { name = \"Infantry Division\" division_names_group = TAG_INF_01 regiments = { infantry = { x = 0 y = 0 } } support = { engineer = { x = 0 y = 0 } } priority = 1 }",
+    "units = { division = { name = \"1st Infantry Division\" location = 12345 division_template = \"Infantry Division\" start_experience_factor = 0.3 start_equipment_factor = 0.5 } }",
+    "instant_effect = { add_equipment_production = { equipment = { type = infantry_equipment_1 creator = TAG } requested_factories = 3 progress = 0.1 efficiency = 50 industrial_manufacturer = mio:TAG_manufacturer_organization } }",
+    "add_equipment_to_stockpile = { type = infantry_equipment amount = 500 producer = TAG variant_name = \"Gewehr 98\" }",
+    "units = { fleet = { name = \"Home Fleet\" naval_base = 11064 task_force = { name = \"Battle Force\" location = 11064 ship = { name = \"HMS Nelson\" definition = battleship equipment = { ship_hull_heavy_1 = { amount = 1 owner = ENG version_name = \"Nelson Class\" } } } } } }",
+    "air_wings = { 64 = { small_plane_airframe_0 = { owner = \"GER\" amount = 80 version_name = \"Bf 109\" } name = \"JG 132\" } }"
+]
+
+relationships = [
+    "history.units_oob is the shallow reference for OOB structure; this entry is the end-to-end recipe that wires country history to OOB, production and stockpile.",
+    "history.countries covers the country history file basics (capital, politics, ideas); here it is extended into a buildable checklist with DLC-gated OOB selection.",
+    "history.states supplies the province and state ids used by capital, location, naval_base and the air_wings state key.",
+    "units.division_templates and units.sub_units define the battalion and support ids that regiments, support and regimental_support must reference.",
+    "equipment.archetypes explains the type ids used by add_equipment_production and add_equipment_to_stockpile."
+]
+
+validation = [
+    "Open the OOB file and confirm every division_template appears before the units block that references it by exact name.",
+    "Check each location is a land province id in 1-9399 and each naval_base, task_force location and air_wings key is a state id that actually has a port or air base.",
+    "Confirm that all three OOB entry points (oob or set_oob, set_naval_oob, set_air_oob) name files that exist under history/units without the .txt suffix.",
+    "Verify every add_equipment_production equipment type exists in common/units/equipment and that the keyword is requested_factories, not request_factories.",
+    "In history/countries/TAG.txt, confirm add_equipment_production has no creator or version_name keys (equipmentvariant.cpp:1103).",
+    "Confirm MTG ship_hull_* hulls and legacy battleship_* types are not mixed in one navy OOB, and that no ship name repeats inside a country.",
+    "Save as UTF-8 without BOM and leave at least one trailing blank line so the final block is parsed."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\历史文件模板\\OOB文件通用模板（by人走人非）.txt — the 814-line primary source: division_template with priority/division_cap/is_locked, units with division_name/start_experience_factor/start_manpower_factor/force_equipment_variants, MTG and legacy navy blocks, BBA and legacy air_wings, DLC if/else OOB branching, and the 22-item pitfall list.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\历史文件模板\\开局部队和生产线设置（完全版）.txt — set_oob/set_naval_oob/set_air_oob loading rules, the three services must be split into separate files, instant_effect add_equipment_production keys (requested_factories, efficiency, progress, industrial_manufacturer) and the battalion/support id lists.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\历史文件模板\\国家history文件模板【胡桃翻新版本】.txt — the country history skeleton: capital, set_research_slots, set_stability, set_war_support, set_technology, set_convoys, starting_train_buffer, set_fuel_ratio, set_politics, set_popularities, add_ideas, set_autonomy list and the trailing-blank-line warning.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\提词器1.12.txt — add_equipment_to_stockpile syntax (type, amount, producer, variant_name) used for the initial equipment stockpile, and the 0.1/0.3/0.75/0.9 experience bands."
+]

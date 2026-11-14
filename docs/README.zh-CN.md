@@ -17,6 +17,13 @@
 
 </div>
 
+> [!IMPORTANT]
+> **本仓库是改版（fork），不是上游原项目。**
+> 它基于 [RHoiScribe](https://github.com/czxieddan/RHoiScribe)，并使用了
+> [秋起图书馆 / QIUQI LIBRARY](https://steamcommunity.com/sharedfiles/filedetails/?id=3445449478)
+> 这一钢铁雄心 IV 模组制作资料库的内容，以 **GNU AGPL-3.0-or-later** 发布，与上游使用同一许可证。
+> 完整署名与本次改动的清单见 [NOTICE](../NOTICE)，署名页见 [rhoiscribe-attribution.zh-CN.md](rhoiscribe-attribution.zh-CN.md)。
+
 RHoiScribe 为 Codex、Claude Code 和其他兼容 MCP 的客户端提供本地 HOI4 Modding 参考层，以及生成游戏可读文件的工具。
 
 它的目标很明确：减少 agent 因重复联网搜索、过时假设、不安全路径、缺少本地化编码、以及“看起来像 Paradox 脚本但游戏无法加载”的内容造成的浪费。

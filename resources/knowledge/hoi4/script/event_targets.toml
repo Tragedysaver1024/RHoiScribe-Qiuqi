@@ -1,0 +1,74 @@
+id = "script.event_targets"
+
+title = "Event targets: saved scopes, lifetime, and when they go stale"
+
+category = "script"
+
+file_types = [
+    "txt",
+    "yml",
+    "gui"
+]
+
+tags = [
+    "event_target",
+    "event_target:key",
+    "save_event_target_as",
+    "save_global_event_target_as",
+    "clear_global_event_target",
+    "clear_global_event_targets",
+    "global event target",
+    "saved scope",
+    "scope",
+    "TAG vs scope",
+    "state_flag selector",
+    "事件目标",
+    "保存目标",
+    "全局事件目标",
+    "作用域",
+    "国家目标",
+    "标记点",
+    "临时变量",
+    "localisation",
+    "scripted GUI",
+    "txt",
+    "yml",
+    "gui"
+]
+
+body = "An event target is a saved scope handle — a named bookmark pointing at whatever scope (state, country, character, province) was current when the save effect ran. Writing event_target:key at the head of a block re-enters exactly that scope, which is what lets one generic event serve Louisiana, Texas and Georgia: the event does not know the state, only the target name does. Storage is split in two. save_event_target_as = <key> writes the event-local table, cleared when the current execution ends (end of the event, or of the effect call that triggered it); it never crosses an event boundary, is not written into the save, and every event that needs it must save it again. save_global_event_target_as = <key> writes the global table, which survives after execution, across events and inside the save file, until clear_global_event_target = <key> or clear_global_event_targets = yes removes it. Both effects are documented as not usable in scripted GUIs; use variables there. Access is always event_target:key with no space after the colon, and the key is resolved at runtime, so an unsaved name is a silent empty scope rather than a parse error. A variable can hold a country or state id in the same role: set_temp_variable = { country_var = GER } then var:country_var = { ... } behaves like the target, because the variable system also stores database objects — the difference is who owns the lifetime (module vs global table), not what can be stored. Target vs tag vs scope: a tag is a literal, statically known country identity accepted by tag = checks and country-tag slots; a scope is a live object reached through transitions such as owner, controller, capital_scope or a state id; an event target is only a name bound to a scope at runtime, so it may legally point at a state and can never be substituted where the parser demands a literal TAG. Failure modes: an unset target (never saved, saved in a sibling branch, or saved in an event that already ended) resolves to nothing and localisation prints nothing or leaks the raw key; the target decays when the pointed country is annexed and released, when a state changes hands, or after reload — the name survives the save but its object may not, so a global target must be re-saved instead of trusted; using a target in a slot that requires a plain tag fails silently; and saving inside a loop without clearing the selector flag locks the next save onto the same scope again."
+
+syntax_blocks = [
+    "country_event = {\n\tid = usa_state_event.1\n\tis_triggered_only = yes\n\timmediate = {\n\t\thidden_effect = {\n\t\t\tevery_core_state = {\n\t\t\t\tlimit = { has_state_flag = state_flag_2 }\n\t\t\t\tsave_event_target_as = independent_usa_state\n\t\t\t}\n\t\t}\n\t}\n}",
+    "option = {\n\tname = usa_state_event.1.a\n\tevent_target:independent_usa_state = {\n\t\tclr_state_flag = state_flag_2\n\t}\n\tai_chance = { base = 10 }\n}",
+    "random_other_country = {\n\tsave_global_event_target_as = my_country\n}\nevent_target:my_country = {\n\tadd_political_power = 25\n}\nclear_global_event_target = my_country",
+    "set_temp_variable = { country_var = GER }\nvar:country_var = {\n\tcountry_event = my_event.2\n}",
+    "title = \"[independent_usa_state.GetName] declares independence\""
+]
+
+relationships = [
+    "Use with script.scopes: re-entering event_target:key resets what THIS means, and ROOT/PREV keep following the transition chain from that point.",
+    "Use with script.variables: var:scoped_id and set_temp_variable store the same database objects as an event target, with a different lifetime owner.",
+    "Use with script.flags for the state_flag selector pattern that decides which scope is picked up by save_event_target_as, and clear the flag after saving.",
+    "Use with events.country_event: save in immediate so the target already exists before any option block reads it.",
+    "Use with localisation.dynamic_text and scripted_localisation.entries for [key.GetName] output of the saved scope.",
+    "Use with debug.common_errors when a target reads empty or a tag slot rejects an event target."
+]
+
+validation = [
+    "Every event_target:<key> reference must have a matching save_event_target_as or save_global_event_target_as on the same execution path; trace the immediate block, not just the option block.",
+    "Never put event_target:<key> where a literal country tag is required; compare inside the scope instead, e.g. event_target:<key> = { tag = GER }.",
+    "Clear the selector flag or variable (clr_state_flag, clear_variable) right after saving, or the next save in the loop locks onto the same scope.",
+    "Choose the lifetime deliberately: save_event_target_as dies at the end of execution and cannot carry state across events or save/load; a global target needs a matching clear_global_event_target or clear_global_event_targets.",
+    "Do not call save_event_target_as or save_global_event_target_as from scripted GUIs; use variables there.",
+    "Re-save global targets in the event that uses them instead of trusting a name saved many events earlier, since annexation, release, or a reload can leave the name pointing at nothing.",
+    "Keep target keys lowercase and unique per execution, and wrap saves in hidden_effect so the plumbing never appears in player tooltips."
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\高级计算结合\\event_target讲解.txt — primary: the one-generic-event use case, save_event_target_as inside every_core_state with a state_flag_2 limit, re-entering the target in the option to clr_state_flag, and the localisation form [independent_usa_state.GetName].",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\高级代码\\高级计算结合\\pum作用域、变量教程.txt — scope rules an event target lives in (ROOT/THIS/PREV, every_/random_/any_/all_ prefix meaning) plus the variable-as-scope equivalence set_temp_variable = { country_var = GER } / var:country_var, and the note that temp variables are cleared like event targets.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\代码提词\\提词器1.12.txt — exact effect semantics: save_event_target_as is cleared once execution ends, save_global_event_target_as persists until cleared, clear_global_event_target and clear_global_event_targets, the event_target:<event_target_key> scope entry with no space after the colon, the <TAG> country-scope entry it is contrasted with, and the do-not-use-in-scripted-GUIs note.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\特殊案例\\TNO行政区划系统运作原理.md — trigger-side usage of two saved targets compared by event_target:admin_title_new_owner = { tag = JAP }.",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\特殊案例\\TFR经济体制修改模板 by康米斯特\\common\\scripted_effects\\00_TFR_scripted_effects_ZZZ_generic.txt — saving two scopes (disband_state, disband_state_owner) inside one scripted effect and re-entering them nested in a later call."
+]

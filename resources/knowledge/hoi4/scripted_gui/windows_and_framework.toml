@@ -1,0 +1,77 @@
+id = "scripted_gui.framework"
+
+title = "Scripted GUI framework: files, scopes, elements and welcome splash"
+
+category = "scripted_gui"
+
+file_types = [
+    "txt",
+    "gui",
+    "gfx",
+    "yml"
+]
+
+tags = [
+    "scripted_gui",
+    "脚本化GUI",
+    "interface",
+    "界面",
+    "containerWindowType",
+    "window_name",
+    "context_type",
+    "datacontext",
+    "数据上下文",
+    "on_action",
+    "on_startup",
+    "welcome_splash",
+    "欢迎窗口",
+    "popup",
+    "弹窗",
+    "ai_enabled",
+    "gui文件",
+    "triggers",
+    "effects",
+    "properties",
+    "txt",
+    "gui"
+]
+
+body = "Scripted GUI = a .txt in common/scripted_guis holding scripted_gui = { <id> = { ... } }; the id is the script name, not the window name.\nCore: window_name = the containerWindowType name in the .gui, matched exactly; context_type = player_context (default scope is the country using the GUI), selected_country_context, selected_state_context or decision_category, required for decision GUIs; parent_window_name = the concrete window the GUI rides with; parent_window_token = the same by token (top_bar, decision_tab, politics_tab). With selected_* contexts the default scope is the selection, so scope user-side reads as ROOT.\nBehaviour: visible = { ... } gates the whole window; triggers = { <element>_visible  <element>_click_enabled } gate one element; effects = { <element>_click  <element>_right_click } run script on click; properties = { <element> = { image frame x y } } feeds a dynamic value in, so a scripted loc becomes a picture or frame number. The KR splash sets ai_enabled = { always = no }, the safe default for overlays.\nGUI side, interface/*.gui: guiTypes = { containerWindowType = { name position size orientation moveable fade_time click_to_front background = { name spriteType or quadTextureSprite } } }. Inside it this pack shows instantTextBoxType (spelled instantTextboxType in the KR file) with font, borderSize, text, format, maxWidth, maxHeight, fixedsize; iconType with quadTextureSprite, centerposition, pdx_tooltip, frame; buttonType with quadTextureSprite, buttonText, buttonFont, clicksound, oversound, shortcut. Nesting is a container inside a container. Gridbox, label and progressbar never appear here, so take their keys from vanilla.\nOpen and close: no open-window effect exists; a GUI appears when visible becomes true and vanishes when it becomes false. Super event: visible = { has_variable = global.se_display }, closed by the click effect that clears the variable. KR splash: visible = { has_country_flag = show_welcome_splash }, closed by clr_country_flag in options_button_click.\nWelcome-splash pattern: on_startup in _on_actions_arrays.txt builds global.players with every_country = { limit = { is_ai = no }  add_to_array = { array = global.players } }; on_startup in on_actions_global.txt runs for_each_scope_loop = { array = global.players  set_country_flag = show_welcome_splash }; then KR_welcome_splash shows on that flag with context_type = player_context and dirty = KR_welcome_splash_variable. The array must exist before the loop reads it, so keep both effects in one on_startup block.\nKey matching: the scripted_gui id, window_name, containerWindowType name and every element suffix are different namespaces that must line up; the tutorial is inconsistent here (window_name = xstlond_pregnant_OMG, .gui container = xstlond_pregnant_OMG_window), so copy a working source. These templates are partial: no .gui for CM_SE_main_container, no music .asset, element examples stop at the four element types."
+
+syntax_blocks = [
+    "scripted_gui = { KR_welcome_splash = { context_type = player_context  window_name = KR_welcome_splash_container  dirty = KR_welcome_splash_variable  ai_enabled = { always = no }  visible = { has_country_flag = show_welcome_splash }  effects = { options_button_click = { clr_country_flag = show_welcome_splash } } } }",
+    "containerWindowType = { name = KR_welcome_splash_container  position = { x = 0 y = 0 }  size = { width = 800 height = 720 }  moveable = yes  orientation = CENTER  origo = center  background = { name = logo  spriteType = GFX_splash_intro } }",
+    "buttonType = { name = options_button  position = { x = -144 y = -52 }  orientation = center_down  quadTextureSprite = GFX_main_lobby_button  buttonText = options_button_text  buttonFont = hoi_24header  clicksound = click_default  oversound = ui_menu_over  shortcut = ESCAPE }",
+    "on_actions = { on_startup = { effect = { every_country = { limit = { is_ai = no }  add_to_array = { array = global.players } } } } }"
+]
+
+relationships = [
+    "scripted_gui.dynamic_lists covers dynamic_lists, entry_container, change_scope, value and index; this file stops at the static framework and points there for lists.",
+    "gui.gfx_sprites owns spriteType registration, which every quadTextureSprite or spriteType reference here depends on.",
+    "interface.assets_fonts owns the font names used by instantTextBoxType and buttonType.",
+    "scripted_localisation.entries owns defined_text, which the properties block consumes as a dynamic value.",
+    "on_action triggers are the usual opener for a GUI that must appear without player input."
+]
+
+validation = [
+    "window_name equals the containerWindowType name character for character; a mismatch produces a GUI that loads but never appears.",
+    "Every <element>_click, <element>_right_click, <element>_visible and <element>_click_enabled entry has a matching element name inside the .gui file.",
+    "With selected_country_context or selected_state_context, scope the GUI user explicitly as ROOT; the tutorial states the default scope is the selection.",
+    "Set ai_enabled = { always = no } for splashes and event overlays, or fill ai_weights and ai_test_scopes, so the AI does not click interface elements it should ignore.",
+    "Both on_startup effects, the global.players array build and the for_each_scope_loop set_country_flag, sit in one on_actions block so the array exists when the loop reads it.",
+    "Every sprite referenced from a .gui through spriteType or quadTextureSprite is registered in a .gfx; the KR splash registers GFX_splash_intro in KR_welcome_splash.gfx.",
+    "Do not use gridbox, label or progressbar keys that these files never show without checking vanilla, and route list behaviour to scripted_gui.dynamic_lists."
+]
+
+source_refs = [
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\pum脚本化GUI教程.txt — the full framework reference: context_type meanings and tokens, parent_window_token list, visible/effects/triggers/properties, ai_* keys, containerWindowType/instantTextBoxType/iconType/buttonType keys, and the worked super event example with its window_name mismatch.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\GUI制作模板（文件类型）\名称_scripted_gui.txt — minimal per-element skeleton: window_name, context_type = player_context, triggers <element>_enabled and <element>_visible, visible, effects <element>_click.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\预设（scripted）代码\预设GUI_Scripted_GUI.txt — the placeholder-only scripted_gui shape with window_name, context_type, visible, effects and triggers.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\KR开局欢迎窗口模板\common\on_actions\_on_actions_arrays.txt — on_startup every_country limit is_ai = no add_to_array global.players.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\KR开局欢迎窗口模板\common\on_actions\on_actions_global.txt — on_startup for_each_scope_loop over global.players setting show_welcome_splash.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\KR开局欢迎窗口模板\common\scripted_guis\00_welcome_splash_gui.txt — KR_welcome_splash with dirty, ai_enabled always = no, visible on the country flag and options_button_click cleanup.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\KR开局欢迎窗口模板\interface\KR_welcome_splash.gui — nested containerWindowType, background spriteType, instantTextboxType, buttonType with three shortcuts.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\KR开局欢迎窗口模板\interface\KR_welcome_splash.gfx — spriteTypes registering GFX_splash_intro and GFX_logo with textureFile paths.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\KR开局欢迎窗口模板\localisation\welcome_l_english.yml — welcome_title_text, welcome_text, options_button_text keys used by the splash.',
+    'D:\SteamLibrary\steamapps\workshop\content\394360\3445449478\资料\高级代码\GUI\超事件模板\common\scripted_guis\CM_superevent_gui.txt — the smallest real player_context overlay driven by a global variable instead of a parent window.'
+]

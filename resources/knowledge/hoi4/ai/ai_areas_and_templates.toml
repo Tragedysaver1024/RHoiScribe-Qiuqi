@@ -1,0 +1,69 @@
+id = "ai.areas"
+
+title = "AI areas (common/ai_areas): named strategic-region groups for AI front and invasion targets"
+
+category = "ai"
+
+file_types = [
+    "txt"
+]
+
+tags = [
+    "ai_areas",
+    "AI区域",
+    "AI战区",
+    "人工智能",
+    "AI策略",
+    "战略权重",
+    "strategic_regions",
+    "战略区域",
+    "front_control",
+    "前线控制",
+    "invasion_unit_request",
+    "海军入侵",
+    "front_unit_request",
+    "area_priority",
+    "put_unit_buffers",
+    "force_concentration_front_factor",
+    "common/ai_areas",
+    "default.txt",
+    "division template",
+    "ai_template",
+    "ai_strategy文件",
+    "theatre",
+    "txt"
+]
+
+body = "ai_areas 定义“一块可命名的战略区域集合”，让 AI 策略能用一个名字指向一大片地块，省掉在每条策略里堆 state id 或 strategic region id。文件位置 common/ai_areas，原版文件名为 default.txt。最外层必须是 areas = { ... }，里面每个具名块就是一个 area，块内用 strategic_regions = { 7 6 9 38 21 23 } 列出战略区域（strategic region）的数字 id——这里要的是战略区域 id（空军/海军派往的大块区域、国家所在战略区），不是 state id（造工厂的省份）。源文档的例子把德国所在的 7 德国南部、6 德国西北部、9 德国东部、38 德国普鲁士地区和西波兰，与意大利所在的 21 阿尔卑斯山区（含意大利北部和奥地利）、23 意大利南部，合成一个名为 Axis_core_regions 的区域。查 id 的两个办法：以 -debug 启动游戏后鼠标放在地块上会显示 state id 与 strategic regions；或用 vscode 插件 HOI4 Mod Utilities（作者杨超凡）执行“钢丝模组工具：预览世界地图”。若模组改了地块，必须先把改地图的模组加进 vscode 工作区、移除原版工作区再预览，否则拿到的是旧 id。\n\n命名与调用：area 名自定义，之后在 ai_strategy 里用 area = Axis_core_regions 逐字引用。源文档完整示例 ENG_USA_invade_axis_core_regions 用 allowed = { or = { original_tag = ENG original_tag = USA } } 限定英美 AI，用 enable = { or = { has_war_with = GER has_war_with = ITA } } 表示与德意处于战争状态时生效，并加 abort_when_not_enabled = yes，然后挂四条策略：invasion_unit_request（area = Axis_core_regions、value = 25，让英美分兵海军入侵该区域）、front_control（area = Axis_core_regions、ratio = 0.5、ordertype = front、execution_type = balanced、execute_order = yes，在该区域画前线并无脑进攻）、front_unit_request（value = 50，向该区域陆地前线多派兵）、force_concentration_front_factor（ratio = 0.5、value = 50）。execution_type 的可选值是 careful/balanced/rush/rush_weak，对应玩家将领界面上的谨慎/均衡/激进/仓促；execute_order = yes 表示强制执行，no 表示绝不执行。area 还能喂给 area_priority（在指定区域部署更多单位）、force_defend_ally_borders、put_unit_buffers（ratio 为驻防师比例）等陆军策略；战略区域 id 本身可直接写进 naval_avoid_region、naval_convoy_raid_region、strike_force_home_base 这类海军策略，front_control 的目标选择器 state = / tag = / strategic_region = / area = / country_trigger / state_trigger 可以叠加，叠加时每个都必须满足。\n\n语义要点：area 只是“目标定位器”，本身不产生效果，效果全由 type 与 value/ratio/priority 决定。value 是权重、同类相加；ratio 在 front_control 里是“前线比率必须达到多少才启用”的门槛（默认 0），在 put_unit_buffers 里是驻防师比例；priority 用于化解互相矛盾的 front_control（高优先级胜出）。ordertype = front 只作用于陆地前线，ordertype = invasion 只作用于海上入侵，写错会让策略什么都不改；front_control 只修改已存在前线的命令，不会创建前线，也不会改变分配给前线的部队数量，因此“写上去没反应”多半是当时没有对应前线。与战区相关的是 theatre_distribution_demand_increase（向指定国家的战区投放更多部队，value 为具体单位数量）。\n\n与 ai_strategy / 兵种模板的关系：area 只出现在 ai_strategy 块内部，脱离策略就无效；决定 AI 造什么师的是 ai_template 与 ai_equipment（build_army 的 target 用 ai templates 里的角色，role_ratio、unit_ratio、template_prio 调数量），area 决定这些师去哪——区域写了但模板角色缺失时，表现是 AI 在该区域没有可用部队。源文档开头即要求先充分了解 ai_strategy、ai_equipment、ai_template 三个文件再写 ai_areas。\n\npre-ship 检查：确认 areas = { } 外层存在且花括号闭合；确认每个 area 内全是战略区域 id 而非 state id；确认 ai_strategy 里的 area = 与定义名逐字一致（大小写敏感）；确认 front_control 的 ratio 是 0~1 的小数、ordertype 与 execution_type 只用文档枚举；确认互相冲突的 front_control 给了 priority；确认生效条件写在 allowed/enable/abort 而不是塞进 ai_strategy；最后 -debug 实跑，看 AI 是否真在该区域画线、登陆与增兵。"
+
+syntax_blocks = [
+    "areas = { Axis_core_regions = { strategic_regions = { 7 6 9 38 21 23 } } }",
+    "ENG_USA_invade_axis_core_regions = { allowed = { or = { original_tag = ENG original_tag = USA } } enable = { or = { has_war_with = GER has_war_with = ITA } } abort_when_not_enabled = yes }",
+    "ai_strategy = { type = invasion_unit_request area = Axis_core_regions value = 25 }",
+    "ai_strategy = { type = front_control area = Axis_core_regions ratio = 0.5 ordertype = front execution_type = balanced execute_order = yes }",
+    "ai_strategy = { type = front_unit_request area = Axis_core_regions value = 50 }",
+    "ai_strategy = { type = force_concentration_front_factor ratio = 0.5 area = Axis_core_regions value = 50 }"
+]
+
+relationships = [
+    "ai.areas 是 ai.ai_strategy 的目标层：策略块用 area = 引用本文件定义的具名区域，没有 ai_strategy 块时 area 定义不产生任何行为。",
+    "与 ai_template / ai_equipment 分工：那两个文件决定 AI 造什么师、什么船，ai_areas 决定这些力量投送到哪片战略区域。",
+    "front_control 的 target 选择器可以混用 area、tag、state、strategic_region，条件叠加时全部满足才命中。",
+    "put_unit_buffers 与 front_control 都可能带 ratio，含义不同（驻防比例 vs 前线比率门槛），不要互相套用。",
+    "海军类策略（naval_avoid_region、naval_convoy_raid_region、strike_force_home_base）直接吃战略区域 id，不走 ai_areas 命名。"
+]
+
+validation = [
+    "确认文件位于 common/ai_areas 且外层是 areas = { }，所有花括号闭合（缺外层时整文件静默不加载）。",
+    "确认 area 块内 strategic_regions 里填的是战略区域 id，不是 state id；用 -debug 悬停地块核对。",
+    "确认每条 ai_strategy 的 area = 名称与 ai_areas 中的定义逐字一致（大小写、下划线）。",
+    "确认 front_control 使用了 ordertype（front 或 invasion）与合法的 execution_type（careful/balanced/rush/rush_weak），ratio 取 0~1。",
+    "矛盾或多条 front_control 命中同一前线时补 priority，明确谁覆盖谁。",
+    "生效条件写在 allowed/enable/abort/abort_when_not_enabled，不要试图把条件写进 ai_strategy 块本身。",
+    "模组改过地图时，用改后模组重新预览战略区域 id 再定稿，避免沿用原版编号。"
+]
+
+source_refs = [
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\AI模板\\[菜鸟模组教程]ai_areas.txt — 文件位置 common/ai_areas 与原版 default.txt、areas 格式、Axis_core_regions 的 strategic_regions 编号示例、ENG_USA_invade_axis_core_regions 四条策略（invasion_unit_request / front_control / front_unit_request / force_concentration_front_factor）、查 id 的两种方法与改地块后的处理",
+    "D:\\SteamLibrary\\steamapps\\workshop\\content\\394360\\3445449478\\资料\\基础代码\\常用模板\\脚本文件模板\\AI模板\\AI战略编写模板扩充版 原作者：希儿（憨批）.txt — front_control 的 ratio/priority/ordertype/execution_type/execute_order/manual_attack 语义、area_priority 与 force_defend_ally_borders 的 area 用法、put_unit_buffers 的 ratio、theatre_distribution_demand_increase、海军策略与战略区域的关系、build_army/role_ratio/unit_ratio/template_prio 与 ai_template 的关联"
+]

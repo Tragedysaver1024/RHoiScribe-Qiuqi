@@ -41,6 +41,13 @@ inspect_hoi4_scope
 inspect_hoi4_type_rule
 ```
 
+## 知识库
+
+- `search_hoi4_knowledge` 搜索内置 HOI4 知识库并返回资源 URI，用 `resources/read` 读取条目。
+- 覆盖范围包括脚本基础、effect、trigger、scope、collection、循环与数组操作、event target、国策树、事件、决议、on_action、脚本化 GUI 与超事件、阵营、权力平衡、特殊工程、装备模块与设计、建筑、人物与特质、国家精神与修正、OOB 与开局设置、剧本、define 覆写、AI 策略与 AI 区域、版本迁移，以及工作流引导。
+- 搜索为大小写不敏感的包含匹配，空格分隔的每个词都必须命中；tags 中带有中文同义词，因此中文提问无需翻译即可命中。
+- 通过 `rhoiscribe://hoi4/knowledge/catalog` 查看全部条目。
+
 ## 项目质量工具
 
 - 项目索引：`index_hoi4_project` 返回 mod root 以及可选 game roots 中的结构化 definitions、references 和 files。
@@ -82,6 +89,10 @@ generate_localisation_batch
 - 写入需要 `approved=true`。
 - 优先复用工作区已有素材。只有在用户同意创建新的程序化 GUI/GFX 资产后，才设置 `approved=true`。
 - 动画 GUI sprite 应遵循现有 sprite-sheet 约定和 `frameAnimatedSpriteType` 知识，不要把生成的静态 sprite 说成动画。
+- 注册已有素材：`register_hoi4_gfx_sprites` 扫描 mod 内的图片目录，把缺失的 `spriteType` 条目追加到 `.gfx` 文件，让其他工具产出的或手绘的图片可以直接用于 GUI 与 GFX，不必手写注册。
+- 注册按贴图路径匹配，因此重复运行是幂等的：不会重复生成 sprite，并会报告已注册图片、扫描目录内"已注册但文件缺失"的条目，以及因重名被跳过的图片。
+- `dry_run = true` 只预览将要追加的块；只有 `dry_run = false` 才会写入 `.gfx`。
+- 命名规则：`sprite_prefix`（默认 `GFX_`）加清洗后的文件名；当 `name_style = "relative_path"` 时改用清洗后的相对路径。项目命名约定要求全大写时设置 `uppercase = true`。
 
 推荐的资产流程：
 
@@ -89,6 +100,8 @@ generate_localisation_batch
 generate_gui_gfx_asset with dry_run = true
 review returned files and metadata
 generate_gui_gfx_asset with approved=true only after user approval
+register_hoi4_gfx_sprites with dry_run = true
+register_hoi4_gfx_sprites with dry_run = false after review
 ```
 
 ## 环境与调试
