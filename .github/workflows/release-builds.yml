@@ -3,47 +3,25 @@ name: Release Builds
 on:
   push:
     branches:
-      - master
+      - main
     tags:
       - "v*"
   pull_request:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create or update (e.g. v0.4.1-qiuqi.1). Leave empty to only build the binaries."
+        required: false
+        default: ""
 
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  cleanup-release-headings:
-    name: Clean duplicate release body headings
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-    permissions:
-      contents: write
-
-    steps:
-      - name: Clean duplicate release body headings
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          while IFS= read -r release_tag; do
-            body_file="$(mktemp)"
-            gh release view "$release_tag" \
-              --repo "$GITHUB_REPOSITORY" \
-              --json body \
-              --jq '.body' > "$body_file"
-
-            changed="$(python3 -c 'from pathlib import Path; import re; import sys; path = Path(sys.argv[1]); body = path.read_text(encoding="utf-8"); cleaned = re.sub(r"\A## RHoiScribe v[0-9][^\r\n]*(?:\r?\n){1,2}", "", body, count=1); path.write_text(cleaned, encoding="utf-8"); print("yes" if cleaned != body else "no")' "$body_file")"
-
-            if [ "$changed" = "yes" ]; then
-              gh release edit "$release_tag" \
-                --repo "$GITHUB_REPOSITORY" \
-                --notes-file "$body_file"
-            fi
-
-            rm -f "$body_file"
-          done < <(gh release list --repo "$GITHUB_REPOSITORY" --limit 1000 --json tagName --jq '.[].tagName')
-
   build-windows:
     name: Build Windows x86_64
     runs-on: windows-latest
@@ -56,6 +34,11 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
+
+      - name: Cache cargo registry and target
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: windows-x86_64
 
       - name: Build release binary
         run: cargo build --release --locked --target x86_64-pc-windows-msvc
@@ -91,6 +74,11 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-gnu
+
+      - name: Cache cargo registry and target
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: linux-x86_64
 
       - name: Build release binary
         run: cargo build --release --locked --target x86_64-unknown-linux-gnu
@@ -129,6 +117,11 @@ jobs:
       - name: Install macOS targets
         run: rustup target add x86_64-apple-darwin aarch64-apple-darwin
 
+      - name: Cache cargo registry and target
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: macos-universal
+
       - name: Build x86_64 release binary
         run: cargo build --release --locked --target x86_64-apple-darwin
 
@@ -165,9 +158,14 @@ jobs:
       - build-windows
       - build-linux
       - build-macos
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.tag != '')
     permissions:
       contents: write
+
+    env:
+      TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
     steps:
       - name: Checkout release history
@@ -196,20 +194,23 @@ jobs:
       - name: Generate release notes
         shell: bash
         env:
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
         run: |
+          git fetch --tags --force >/dev/null 2>&1 || true
           PREVIOUS_TAG="$(git describe --tags --abbrev=0 "${TAG_NAME}^" 2>/dev/null || true)"
 
           if [ -n "$PREVIOUS_TAG" ]; then
-            CHANGE_RANGE="$PREVIOUS_TAG..$TAG_NAME"
+            CHANGE_RANGE="$PREVIOUS_TAG..${TAG_NAME}"
             CHANGE_HEADING="Changes since \`$PREVIOUS_TAG\`:"
           else
-            CHANGE_RANGE="$TAG_NAME"
+            CHANGE_RANGE="HEAD"
             CHANGE_HEADING="Included changes:"
           fi
 
           {
-            echo "RHoiScribe is a local MCP server for Hearts of Iron IV modding agents. Download the file for your platform, keep it in a stable folder, and use its path as the MCP server command."
+            echo "RHoiScribe-Qiuqi is a local MCP server and SKILL for Hearts of Iron IV modding agents."
+            echo
+            echo "This is a modified edition (fork) of [RHoiScribe](https://github.com/czxieddan/RHoiScribe) with knowledge drawn from the [秋起图书馆 / QIUQI LIBRARY](https://steamcommunity.com/sharedfiles/filedetails/?id=3445449478) modding library, distributed under AGPL-3.0-or-later. See [NOTICE](https://github.com/$GITHUB_REPOSITORY/blob/main/NOTICE) for the full attribution and the list of changes."
             echo
             echo "### Downloads"
             echo
@@ -219,20 +220,15 @@ jobs:
             echo "- Linux x86_64: \`rhoiscribe-linux-x86_64\`"
             echo "- macOS universal: \`rhoiscribe-macos-universal\`"
             echo
-            echo "> [!WARNING]"
-            echo "> The Skill package is still available for now, but it is no longer the recommended path for new language support. That support works best in a long-lived process that can stay warm; Skill runs as short-lived calls, so Skill support will be phased out gradually. Use the MCP server when your client can."
+            echo "Skill packages bundle \`SKILL.md\` with the matching executable:"
             echo
-            echo "Skill packages include \`SKILL.md\` and the matching executable:"
-            echo
-            echo "- Windows Skill package: \`rhoiscribe-skill-windows-x86_64.zip\`"
-            echo "- Linux Skill package: \`rhoiscribe-skill-linux-x86_64.zip\`"
-            echo "- macOS Skill package: \`rhoiscribe-skill-macos-universal.zip\`"
-            echo
-            echo "Skill packages are the quickest way to give compatible agents local access without editing MCP configuration. For complete functionality and a smoother experience, use the MCP server when your agent supports it."
+            echo "- Windows: \`rhoiscribe-skill-windows-x86_64.zip\`"
+            echo "- Linux: \`rhoiscribe-skill-linux-x86_64.zip\`"
+            echo "- macOS: \`rhoiscribe-skill-macos-universal.zip\`"
             echo
             echo "On Linux or macOS, run \`chmod +x <downloaded-file>\` if your system asks for executable permission."
             echo
-            echo "To print the command path for your MCP client, run the downloaded file with \`--print-command\`. To use RHoiScribe from a Skill package without MCP setup, run \`--skill list-tools\`, \`--skill list-resources\`, or \`--skill list-prompts\`."
+            echo "Use the downloaded file path as the MCP server command. To print it, run the binary with \`--print-command\`. Without MCP setup, \`--skill list-tools\`, \`--skill list-resources\` and \`--skill list-prompts\` work from a Skill package."
             echo
             echo "### Changes"
             echo
@@ -245,17 +241,18 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
         run: |
           if ! gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$TAG_NAME" \
               --repo "$GITHUB_REPOSITORY" \
-              --title "RHoiScribe $TAG_NAME" \
+              --target "$GITHUB_SHA" \
+              --title "RHoiScribe-Qiuqi $TAG_NAME" \
               --notes-file release-notes.md
           else
             gh release edit "$TAG_NAME" \
               --repo "$GITHUB_REPOSITORY" \
-              --title "RHoiScribe $TAG_NAME" \
+              --title "RHoiScribe-Qiuqi $TAG_NAME" \
               --notes-file release-notes.md
           fi
 
