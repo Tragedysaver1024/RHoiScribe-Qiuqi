@@ -153,8 +153,16 @@ Rchadow provides playset storage, HOI4 mod discovery, launcher-compatible load f
 </div>
 
 <div align="center">
+  <h3>メンテナー</h3>
+  <p align="center">
+    この改訂版は <a href="https://github.com/Tragedysaver1024"><strong>@Tragedysaver1024</strong></a> が保守しています。<br>
+    この改訂版の不具合報告と PR は、上流ではなくこのリポジトリへお願いします。
+  </p>
+</div>
+
+<div align="center">
   <h3>Contributors</h3>
-  <a href="https://github.com/czxieddan/RHoiScribe/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=czxieddan/RHoiScribe" alt="RHoiScribe contributors">
+  <a href="https://github.com/Tragedysaver1024/RHoiScribe-Qiuqi/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=Tragedysaver1024/RHoiScribe-Qiuqi" alt="RHoiScribe-Qiuqi contributors">
   </a>
 </div>

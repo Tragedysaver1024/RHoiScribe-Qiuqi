@@ -175,8 +175,16 @@ Commits are authored by the human maintainer; this is a credit line, not a GitHu
 </div>
 
 <div align="center">
+  <h3>Maintainer</h3>
+  <p align="center">
+    This edition is maintained by <a href="https://github.com/Tragedysaver1024"><strong>@Tragedysaver1024</strong></a>.<br>
+    Bug reports, feature requests and pull requests for this fork belong here, not in the upstream tracker.
+  </p>
+</div>
+
+<div align="center">
   <h3>Contributors</h3>
-  <a href="https://github.com/czxieddan/RHoiScribe/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=czxieddan/RHoiScribe" alt="RHoiScribe contributors">
+  <a href="https://github.com/Tragedysaver1024/RHoiScribe-Qiuqi/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=Tragedysaver1024/RHoiScribe-Qiuqi" alt="RHoiScribe-Qiuqi contributors">
   </a>
 </div>
