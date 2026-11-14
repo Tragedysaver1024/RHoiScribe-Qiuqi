@@ -373,10 +373,10 @@ fn parse_sprite_registrations(text: &str) -> Vec<(String, String)> {
         }
         if key == "name" {
             pending_name = Some(value.to_string());
-        } else if key == "texturefile" {
-            if let Some(name) = pending_name.take() {
-                registrations.push((name, value.to_string()));
-            }
+        } else if key == "texturefile"
+            && let Some(name) = pending_name.take()
+        {
+            registrations.push((name, value.to_string()));
         }
     }
 
