@@ -162,6 +162,19 @@ Rchadow provides playset storage, HOI4 mod discovery, launcher-compatible load f
 </div>
 
 <div align="center">
+
+<h3><strong>Implementation assistance</strong></h3>
+
+<p align="center">
+The changes in this edition were implemented with the assistance of a DeepSeek Harness agent
+(model <code>deepseek-flash</code>, 2026-11-14): the knowledge catalog expansion, the
+<code>register_hoi4_gfx_sprites</code> tool, the cross-platform <code>build.rs</code> fix and the documentation updates.<br>
+Commits are authored by the human maintainer; this is a credit line, not a GitHub account. See <a href="NOTICE">NOTICE</a>.
+</p>
+
+</div>
+
+<div align="center">
   <h3>Contributors</h3>
   <a href="https://github.com/czxieddan/RHoiScribe/graphs/contributors">
     <img src="https://contrib.rocks/image?repo=czxieddan/RHoiScribe" alt="RHoiScribe contributors">

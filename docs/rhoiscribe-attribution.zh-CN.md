@@ -46,6 +46,17 @@
 3. **构建修复** `build.rs`：Windows 图标 / 版本资源改为可选。找不到资源编译器（`llvm-rc`、Windows SDK 的 `rc.exe` 或 `RC` 环境变量）时只打印 warning 并跳过，不再 panic，使纯 Rust 工具链也能编译；若编译器存在但执行失败，仍然报错。
 4. **文档**：`docs/features.*`（英 / 中 / 日 / 俄）补充新工具与知识库章节；`CONTRIBUTING.md` 说明资源编译器可选；README 与各语言 README 增加改版声明。
 
+## 实现协助
+
+上述改动在以下环境中由 DeepSeek Harness 代理协助完成：
+
+- 运行时：[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
+- 模型：`deepseek-flash`
+- 时间：2026-11-14
+- 范围：知识库扩充、`register_hoi4_gfx_sprites` 工具、跨平台 `build.rs` 修复、文档更新
+
+这是署名说明，不是 GitHub 账号：本仓库所有提交的作者均为人类维护者；DeepSeek 及 DeepSeek Harness 未对这些改动主张作者身份，也不提供担保或技术支持。
+
 ## 许可证义务
 
 本改版依据 AGPL-3.0-or-later 分发：

@@ -75,6 +75,21 @@ Changes in this edition
      and the knowledge catalog; CONTRIBUTING.md explains the optional resource
      compiler; README and localized READMEs carry the modified-edition notice.
 
+Implementation assistance
+-------------------------
+  The changes listed above were implemented with assistance from a DeepSeek
+  Harness agent, running locally on the maintainer's machine:
+
+    Runtime:  DeepSeek Harness (https://github.com/deepseek-ai/deepseek-harness)
+    Model:    deepseek-flash
+    Date:     2026-11-14
+    Scope:    knowledge catalog expansion, the `register_hoi4_gfx_sprites`
+              tool, the cross-platform `build.rs` fix, documentation updates.
+
+  This is a credit line, not a GitHub account. Every commit in this repository
+  is authored by the human maintainer; no authorship, warranty or support for
+  these changes is claimed by DeepSeek or by DeepSeek Harness.
+
 Trademarks and game content
 ---------------------------
   Hearts of Iron IV is a trademark of Paradox Interactive AB. This repository

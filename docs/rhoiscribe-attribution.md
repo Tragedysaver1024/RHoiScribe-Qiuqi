@@ -46,6 +46,17 @@ Date: 2026-11-14
 3. **Build fix** in `build.rs`: the Windows icon/version resource is now optional. With no resource compiler available (`llvm-rc`, a Windows SDK `rc.exe`, or `RC`), the build prints a warning and links no resource instead of panicking, so a plain Rust toolchain can compile the project; a compiler that is found but fails is still a hard error.
 4. **Documentation**: `docs/features.*` (en, zh-CN, ja, ru) cover the new tool and the knowledge catalog; `CONTRIBUTING.md` explains the optional resource compiler; the README and the localized READMEs carry the modified-edition notice.
 
+## Implementation assistance
+
+The changes listed above were implemented with assistance from a DeepSeek Harness agent, running locally on the maintainer's machine:
+
+- Runtime: [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
+- Model: `deepseek-flash`
+- Date: 2026-11-14
+- Scope: knowledge catalog expansion, the `register_hoi4_gfx_sprites` tool, the cross-platform `build.rs` fix, documentation updates.
+
+This is a credit line, not a GitHub account: every commit in this repository is authored by the human maintainer, and no authorship, warranty or support for these changes is claimed by DeepSeek or by DeepSeek Harness.
+
 ## License obligations
 
 This edition is distributed under AGPL-3.0-or-later:
